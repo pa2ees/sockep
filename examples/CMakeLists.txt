@@ -1,0 +1,15 @@
+cmake_minimum_required(VERSION 3.13)
+
+add_executable(unixdgram_server EXCLUDE_FROM_ALL)
+add_executable(unixdgram_client EXCLUDE_FROM_ALL)
+
+target_link_libraries(unixdgram_server PRIVATE sockep)
+target_link_libraries(unixdgram_client PRIVATE sockep)
+
+target_sources(unixdgram_server PRIVATE
+unixdgram_server.cpp
+)
+
+target_sources(unixdgram_client PRIVATE
+unixdgram_client.cpp
+)
