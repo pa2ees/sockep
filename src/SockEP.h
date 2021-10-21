@@ -5,6 +5,9 @@
 #include "IClientSockEP.h"
 
 #include <sys/un.h>
+#include <thread>
+#include <mutex>
+#include <map>
 
 enum SockEPType
 {
@@ -21,7 +24,8 @@ enum SockEPType
 class SockEP : virtual public ISockEP
 {
 public:
-    SockEP (SockEPType sockType);
+    SockEP(SockEPType sockType);
+    ~SockEP();
 
     bool isValid() override {return isValid_;};
     int getSock() override {return sock_;};
@@ -45,9 +49,27 @@ public:
     UnixDgramServerSockEP(std::string bindPath);
     std::string getMessage() override;
     void sendMessage(std::string msg) override;
+    void startServer() override;
+    void stopServer() override;
+    bool serverRunning() override;
+    void sendMessageToClient(int clientId, std::string msg) override;
+    std::vector<int> getClientIds() override;
 
 private:
+    // struct Client
+    // {
+    //     int index;
+    //     struct sockaddr_un clientSockaddr;
+    //     Client(int i, sockaddr_un &cs) : index{i}, clientSockaddr{cs} {};
+    // };
+
+    void addClient(struct sockaddr_un clientSaddr);
+
     struct sockaddr_un saddr_;
+    bool serverRunning_;
+    std::map<int, struct sockaddr_un> clients_;
+    std::mutex clientsMutex_;
+    
 };
 
 class UnixDgramClientSockEP : public SockEP, public IClientSockEP
@@ -66,6 +88,12 @@ class UnixStreamServerSockEP : public SockEP, public IServerSockEP
 {
 public:
     UnixStreamServerSockEP(std::string bindPath);
+    void sendMessage(std::string msg) override {};
+    void startServer() override {};
+    void stopServer() override {};
+    bool serverRunning() override {return false;};
+    void sendMessageToClient(int clientId, std::string msg) override {};
+    std::vector<int> getClientIds() override {return {0,1};};
 
 private:
     std::string bindPath_;

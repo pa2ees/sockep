@@ -9,6 +9,11 @@ SockEP::SockEP(SockEPType sockType) : sockType_{sockType}
     std::cout << "Constructing SockEP... " << std::endl;
 }
 
+SockEP::~SockEP()
+{
+    closeSocket();
+}
+
 int SockEP::closeSocket()
 {
     close(sock_);
@@ -50,6 +55,8 @@ void UnixDgramServerSockEP::sendMessage(std::string msg)
 
 std::string UnixDgramServerSockEP::getMessage()
 {
+    memset(&msg_, 0, sizeof(msg_));
+
     if (isValid())
     {
         struct sockaddr_un clientSaddr;
@@ -59,21 +66,86 @@ std::string UnixDgramServerSockEP::getMessage()
         int bytesReceived = recvfrom(sock_, msg_, sizeof(msg_), 0, (struct sockaddr *) &clientSaddr, &clientSaddrLen);
         std::cout << "Received " << bytesReceived << " bytes from " << clientSaddr.sun_path << std::endl;
 
-        sendto(sock_, "I farted", 9, 0, (struct sockaddr *) &clientSaddr, sizeof(clientSaddr));
+        addClient(clientSaddr);
+        //sendto(sock_, "I farted", 9, 0, (struct sockaddr *) &clientSaddr, sizeof(clientSaddr));
     }
     return msg_;
 }
 
-// std::vector<int> UnixDgramServerSockEP::getClientIds()
-// {
-//     return clientIds_;
-// }
+void UnixDgramServerSockEP::addClient(struct sockaddr_un clientSaddr)
+{
+    // find if client already exists
+    std::lock_guard<std::mutex> lock(clientsMutex_);
+        
+    for (auto client : clients_)
+    {
+        if (strcmp(client.second.sun_path, clientSaddr.sun_path) == 0)
+        {
+            // client already in list
+            return;
+        }
+    }
 
-// void UnixDgramServerSockEP::startServer()
-// {
-//     // this should start the server listening (in its own thread)
-//     // and populate the clientIds_ with any client that connects
-// }
+    int clientId = 0;
+    if (!clients_.empty())
+    {
+        // get the id of the last client and add 1
+        clientId = std::prev(clients_.end())->first + 1;
+    }
+    std::cout << "Inserting client with ID " << clientId << " and address " << clientSaddr.sun_path << std::endl; 
+    clients_.emplace(clientId, clientSaddr);
+}
+
+void UnixDgramServerSockEP::startServer()
+{
+    // this should start the server listening (in its own thread)
+    // and populate the clientIds_ with any client that connects
+    serverRunning_ = true;
+}
+
+void UnixDgramServerSockEP::stopServer()
+{
+    // stop
+    // server
+}
+
+bool UnixDgramServerSockEP::serverRunning()
+{
+    return serverRunning_;
+}
+
+void UnixDgramServerSockEP::sendMessageToClient(int clientId, std::string msg)
+{
+    if (!isValid())
+    {
+        return;
+    }
+    // maybe if clientId == -1 then send message to all clients?
+    clientsMutex_.lock();
+    auto clientIt = clients_.find(clientId);
+    clientsMutex_.unlock();
+
+    if (clientIt == clients_.end())
+    {
+        // not found
+        return;
+    }
+    sendto(sock_, msg.c_str(), msg.length(), 0, (struct sockaddr *) &clientIt->second, sizeof(clientIt->second));
+    
+}
+
+std::vector<int> UnixDgramServerSockEP::getClientIds()
+{
+    std::vector<int> clientIds;
+
+    const std::lock_guard<std::mutex> lock(clientsMutex_);
+    for (auto client : clients_)
+    {
+        clientIds.push_back(client.first);
+    }
+    
+    return clientIds;    
+}
 
 UnixDgramServerSockEP::UnixDgramServerSockEP(std::string bindPath) : SockEP(unixDgramServer)
 {

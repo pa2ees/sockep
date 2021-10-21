@@ -13,7 +13,12 @@ int main()
 
     std::string serverMsg = client->getMessage();
     std::cout << "Got message from server: " << serverMsg << std::endl;
-    
+
+    client->sendMessage("I found you!");
+    serverMsg = client->getMessage();
+    std::cout << "Got message from server: " << serverMsg << std::endl;
+
+    client->sendMessage("quit");
     client->closeSocket();
 
     return 0;
