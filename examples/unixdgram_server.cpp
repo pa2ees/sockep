@@ -1,31 +1,51 @@
 #include "sockep/SockEPFactory.h"
 
 #include <iostream>
+#include <string>
+#include <unistd.h>
+
+bool running = true;
+IServerSockEP *srvr;
+void messageHandler(int clientId, std::string msg)
+{
+    std::cout << "Got message from client " << clientId << ": " << msg << std::endl;
+    srvr->sendMessageToClient(clientId, "Got your message, Hello!!");
+    if (msg == "quit")
+    {
+        running = false;
+    }
+    
+}
 
 int main()
 {
+    running = true;
 
-    IServerSockEP *srvr = SockEPFactory::createUnixDgramServerSockEP("/tmp/fartserver");
+    srvr = SockEPFactory::createUnixDgramServerSockEP("/tmp/fartserver", messageHandler);
 
     std::cout << "Server valid: " << (srvr->isValid() ? "true" : "false") << std::endl;
-
-    std::string recvStr = srvr->getMessage();
+    srvr->startServer();
+    std::cout << "Server started";
     
-    while (recvStr != "quit")
+    // std::string recvStr = srvr->getMessage();
+    
+    while (running)
     {
-        std::cout << "Message is: " << recvStr << std::endl;
+        usleep(1000 * 10); // 10 ms
+        // std::cout << "Message is: " << recvStr << std::endl;
         
-        std::vector<int> clients = srvr->getClientIds();
-        std::cout << "There are " << clients.size() << " clients" << std::endl;
-        if (!clients.empty())
-        {
-            int firstClientId = clients.front();
-            std::cout << "Sending message to the first client (ID " << firstClientId << ")" << std::endl;
-            srvr->sendMessageToClient(firstClientId, "FartFace");
-        }
-        recvStr = srvr->getMessage();
+        // std::vector<int> clients = srvr->getClientIds();
+        // std::cout << "There are " << clients.size() << " clients" << std::endl;
+        // if (!clients.empty())
+        // {
+        //     int firstClientId = clients.front();
+        //     std::cout << "Sending message to the first client (ID " << firstClientId << ")" << std::endl;
+        //     srvr->sendMessageToClient(firstClientId, "FartFace");
+        // }
+        // recvStr = srvr->getMessage();
     }
     
+    srvr->stopServer();
     srvr->closeSocket();
     
     return 0;

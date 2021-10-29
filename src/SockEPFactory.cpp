@@ -9,9 +9,9 @@
 //     IServerSockEP *val;
 //     return val;
 // }
-IServerSockEP *SockEPFactory::createUnixDgramServerSockEP(std::string bindPath)
+IServerSockEP *SockEPFactory::createUnixDgramServerSockEP(std::string bindPath, void (*callback)(int, std::string))
 {
-    return new UnixDgramServerSockEP(bindPath);
+    return new UnixDgramServerSockEP(bindPath, callback);
 }
 
 IClientSockEP *SockEPFactory::createUnixDgramClientSockEP(std::string bindPath, std::string serverPath)

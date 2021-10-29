@@ -10,7 +10,7 @@ private:
     SockEPFactory() {};
     ~SockEPFactory() {};
 public:
-    static IServerSockEP *createUnixDgramServerSockEP(std::string bindPath);
+    static IServerSockEP *createUnixDgramServerSockEP(std::string bindPath, void (*callback)(int, std::string));
     static IClientSockEP *createUnixDgramClientSockEP(std::string bindPath, std::string serverPath);
     static IServerSockEP *createUnixStreamServerSockEP(std::string bindPath);
     static IClientSockEP *createUnixStreamClientSockEP(std::string serverPath);

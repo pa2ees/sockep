@@ -1,6 +1,7 @@
 #include "SockEP.h"
 #include <iostream>
 #include <sys/socket.h>
+#include <sys/select.h>
 #include <unistd.h>
 #include <vector>
 
@@ -67,12 +68,11 @@ std::string UnixDgramServerSockEP::getMessage()
         std::cout << "Received " << bytesReceived << " bytes from " << clientSaddr.sun_path << std::endl;
 
         addClient(clientSaddr);
-        //sendto(sock_, "I farted", 9, 0, (struct sockaddr *) &clientSaddr, sizeof(clientSaddr));
     }
     return msg_;
 }
 
-void UnixDgramServerSockEP::addClient(struct sockaddr_un clientSaddr)
+int UnixDgramServerSockEP::addClient(struct sockaddr_un clientSaddr)
 {
     // find if client already exists
     std::lock_guard<std::mutex> lock(clientsMutex_);
@@ -81,8 +81,8 @@ void UnixDgramServerSockEP::addClient(struct sockaddr_un clientSaddr)
     {
         if (strcmp(client.second.sun_path, clientSaddr.sun_path) == 0)
         {
-            // client already in list
-            return;
+            // client already in list, return id.
+            return client.first;
         }
     }
 
@@ -94,19 +94,101 @@ void UnixDgramServerSockEP::addClient(struct sockaddr_un clientSaddr)
     }
     std::cout << "Inserting client with ID " << clientId << " and address " << clientSaddr.sun_path << std::endl; 
     clients_.emplace(clientId, clientSaddr);
+    return clientId;
 }
 
 void UnixDgramServerSockEP::startServer()
 {
-    // this should start the server listening (in its own thread)
-    // and populate the clientIds_ with any client that connects
     serverRunning_ = true;
+    if (pipe(pipeFd_) != 0)
+    {
+        perror("Failed to create pipe");
+        serverRunning_ = false;
+        return;
+    }
+    std::cout << "Starting thread..." << std::endl;
+    serverThread_ = std::thread(&UnixDgramServerSockEP::runServer, this);
 }
 
+void UnixDgramServerSockEP::runServer()
+{
+    if (!isValid())
+    {
+        std::cerr << "Socket is not valid, cannot run a server" << std::endl;
+        serverRunning_ = false;
+        return;
+    }
+
+    std::cout << "Successfully started server thread" << std::endl;
+    fd_set rfds;
+    struct sockaddr_un clientSaddr;
+    socklen_t clientSaddrLen = sizeof(struct sockaddr_un);
+
+    
+    while (serverRunning_)
+    {
+        std::cout << "server tick" << std::endl;
+        FD_ZERO(&rfds);
+
+        // add our socket fd, and the pipe fd
+        FD_SET(sock_, &rfds);
+        FD_SET(pipeFd_[0], &rfds);
+
+        std::cout << "calling select..." << std::endl;
+        int selectStatus = select(FD_SETSIZE, &rfds, NULL, NULL, NULL);
+        if (selectStatus == -1)
+        {
+            perror("problem with select");
+            serverRunning_ = false;
+        }
+        else
+        { // one of the file handles is ready to read
+            if (FD_ISSET(sock_, &rfds))
+            { // external message - read from socket and add client
+                memset(&clientSaddr, 0, sizeof(struct sockaddr_un));
+                
+                int bytesReceived = recvfrom(sock_, msg_, sizeof(msg_), 0, (struct sockaddr *) &clientSaddr, &clientSaddrLen);
+                msg_[bytesReceived] = '\0';
+                std::cout << "Received " << bytesReceived << " bytes from " << clientSaddr.sun_path << std::endl;
+
+                // this will always return the client id, whether it's already exists or not
+                int clientId = addClient(clientSaddr);
+                
+                //addMessageToClient(clientId, msg_, bytesReceived);
+                if (callback_)
+                {
+                    callback_(clientId, msg_);
+                }
+            }
+            else if (FD_ISSET(pipeFd_[0], &rfds))
+            { // internal message
+                serverRunning_ = false;
+                std::cout << "stopping server" << std::endl;
+            }
+            else
+            {
+                std::cout << "No idea what happened here" << std::endl;
+                serverRunning_ = false;
+            }
+        }
+        
+    }
+
+}
 void UnixDgramServerSockEP::stopServer()
 {
-    // stop
-    // server
+    if (!serverRunning_)
+    {
+        std::cout << "Must first start the thread before stopping it" << std::endl;
+        return;
+    }
+    close(pipeFd_[1]);
+    if (serverThread_.joinable())
+    {
+        std::cout << "Server thread is joinable, joining..." << std::endl;
+        serverThread_.join();
+        std::cout << "Successfully joined thread." << std::endl;
+    }
 }
 
 bool UnixDgramServerSockEP::serverRunning()
@@ -147,7 +229,7 @@ std::vector<int> UnixDgramServerSockEP::getClientIds()
     return clientIds;    
 }
 
-UnixDgramServerSockEP::UnixDgramServerSockEP(std::string bindPath) : SockEP(unixDgramServer)
+UnixDgramServerSockEP::UnixDgramServerSockEP(std::string bindPath, void (*callback)(int, std::string)) : SockEP(unixDgramServer), callback_{callback}
 {
 
     std::cout << "Constructing Unix Datagram Server Socket..." << std::endl;

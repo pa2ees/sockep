@@ -8,6 +8,7 @@
 #include <thread>
 #include <mutex>
 #include <map>
+#include <atomic>
 
 enum SockEPType
 {
@@ -46,7 +47,7 @@ protected:
 class UnixDgramServerSockEP : public SockEP, public IServerSockEP
 {
 public:
-    UnixDgramServerSockEP(std::string bindPath);
+    UnixDgramServerSockEP(std::string bindPath, void (*callback)(int,std::string) = nullptr);
     std::string getMessage() override;
     void sendMessage(std::string msg) override;
     void startServer() override;
@@ -56,20 +57,20 @@ public:
     std::vector<int> getClientIds() override;
 
 private:
-    // struct Client
-    // {
-    //     int index;
-    //     struct sockaddr_un clientSockaddr;
-    //     Client(int i, sockaddr_un &cs) : index{i}, clientSockaddr{cs} {};
-    // };
 
-    void addClient(struct sockaddr_un clientSaddr);
+    int addClient(struct sockaddr_un clientSaddr);
+    //int addMessageToClient(int clientId, char *message, int messageLen);
+    void runServer(); // meant to be the function for the receive thread
 
     struct sockaddr_un saddr_;
-    bool serverRunning_;
+    std::atomic<bool> serverRunning_;
+    
+    // need to create an actual client class to store messages in
     std::map<int, struct sockaddr_un> clients_;
     std::mutex clientsMutex_;
-    
+    std::thread serverThread_;
+    void (*callback_)(int, std::string);
+    int pipeFd_[2];
 };
 
 class UnixDgramClientSockEP : public SockEP, public IClientSockEP
