@@ -5,7 +5,7 @@
 int main()
 {
 
-    IClientSockEP *client = SockEPFactory::createUnixDgramClientSockEP("/tmp/fartclient", "/tmp/fartserver");
+    sockep::IClientSockEP *client = sockep::SockEPFactory::createUnixDgramClientSockEP("/tmp/fartclient", "/tmp/fartserver");
 
     std::cout << "Client valid: " << (client->isValid() ? "true" : "false") << std::endl;
 
@@ -19,7 +19,6 @@ int main()
     std::cout << "Got message from server: " << serverMsg << std::endl;
 
     client->sendMessage("quit");
-    client->closeSocket();
 
     return 0;
 }

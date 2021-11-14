@@ -1,8 +1,13 @@
 #include "SockEPFactory.h"
 
-#include "IServerSockEP.h"
-#include "IClientSockEP.h"
-#include "SockEP.h"
+#include "server/IServerSockEP.h"
+#include "client/IClientSockEP.h"
+// #include "SockEP.h"
+
+#include "server/UnixDgramServerSockEP.h"
+#include "client/UnixDgramClientSockEP.h"
+
+using namespace sockep;
 
 // IServerSockEP *SockEPFactory::createServerSockEP()
 // {
@@ -19,15 +24,15 @@ IClientSockEP *SockEPFactory::createUnixDgramClientSockEP(std::string bindPath, 
     return new UnixDgramClientSockEP(bindPath, serverPath);
 }
 
-IServerSockEP *SockEPFactory::createUnixStreamServerSockEP(std::string bindPath)
-{
-    return new UnixStreamServerSockEP(bindPath);
-}
+// IServerSockEP *SockEPFactory::createUnixStreamServerSockEP(std::string bindPath)
+// {
+//     return new UnixStreamServerSockEP(bindPath);
+// }
 
-IClientSockEP *SockEPFactory::createUnixStreamClientSockEP(std::string serverPath)
-{
-    return new UnixStreamClientSockEP(serverPath);
-}
+// IClientSockEP *SockEPFactory::createUnixStreamClientSockEP(std::string serverPath)
+// {
+//     return new UnixStreamClientSockEP(serverPath);
+// }
 
 // ISockEP *SockEPFactory::createUnixStreamSockEP()
 // {

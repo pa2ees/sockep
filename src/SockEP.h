@@ -1,8 +1,8 @@
 #pragma once
 
 #include "ISockEP.h"
-#include "IServerSockEP.h"
-#include "IClientSockEP.h"
+#include "server/IServerSockEP.h"
+#include "client/IClientSockEP.h"
 
 #include <sys/un.h>
 #include <thread>
@@ -44,34 +44,6 @@ protected:
     char msg_[1000];
 };
 
-class UnixDgramServerSockEP : public SockEP, public IServerSockEP
-{
-public:
-    UnixDgramServerSockEP(std::string bindPath, void (*callback)(int,std::string) = nullptr);
-    std::string getMessage() override;
-    void sendMessage(std::string msg) override;
-    void startServer() override;
-    void stopServer() override;
-    bool serverRunning() override;
-    void sendMessageToClient(int clientId, std::string msg) override;
-    std::vector<int> getClientIds() override;
-
-private:
-
-    int addClient(struct sockaddr_un clientSaddr);
-    //int addMessageToClient(int clientId, char *message, int messageLen);
-    void runServer(); // meant to be the function for the receive thread
-
-    struct sockaddr_un saddr_;
-    std::atomic<bool> serverRunning_;
-    
-    // need to create an actual client class to store messages in
-    std::map<int, struct sockaddr_un> clients_;
-    std::mutex clientsMutex_;
-    std::thread serverThread_;
-    void (*callback_)(int, std::string);
-    int pipeFd_[2];
-};
 
 class UnixDgramClientSockEP : public SockEP, public IClientSockEP
 {
@@ -79,17 +51,22 @@ public:
     UnixDgramClientSockEP(std::string bindPath, std::string serverPath);
     void sendMessage(std::string msg) override;
     std::string getMessage() override;
+    bool operator== (IClientSockEP const *other) override {return true;};
+    void clearClientSaddr() override {};
+    struct sockaddr * getClientSaddr() override {return nullptr;};
+    socklen_t getClientSaddrLen() override {socklen_t val; return val;};
+    std::string to_str() override {std::string s = "hello"; return s;};
 
 private:
     struct sockaddr_un saddr_;
     struct sockaddr_un serverSaddr_;
 };
 
-class UnixStreamServerSockEP : public SockEP, public IServerSockEP
+class UnixStreamServerSockEP : public IServerSockEP
 {
 public:
     UnixStreamServerSockEP(std::string bindPath);
-    void sendMessage(std::string msg) override {};
+    bool isValid() override {return isValid_;};
     void startServer() override {};
     void stopServer() override {};
     bool serverRunning() override {return false;};
@@ -98,6 +75,10 @@ public:
 
 private:
     std::string bindPath_;
+    SockEPType sockType_;
+    int sock_ = -1;
+    bool isValid_ = false;
+    char msg_[1000];
 };
 
 class UnixStreamClientSockEP : public SockEP, public IClientSockEP
