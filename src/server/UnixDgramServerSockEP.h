@@ -19,7 +19,7 @@ private:
 
     void runServer() override; // meant to be the function for the receive thread
 
-    IClientSockEP* createNewClient() override {return nullptr;};
+    ISSClientSockEP* createNewClient() override;
 
     struct sockaddr_un saddr_;
     socklen_t slen_;

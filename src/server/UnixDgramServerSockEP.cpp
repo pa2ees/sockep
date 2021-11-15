@@ -1,4 +1,5 @@
 #include "UnixDgramServerSockEP.h"
+#include "client/UnixDgramClientSockEP.h" // so server can create new server side clients
 #include <iostream>
 #include <sys/socket.h>
 #include <sys/select.h>
@@ -52,16 +53,12 @@ void UnixDgramServerSockEP::runServer()
     std::cout << "Successfully started server thread" << std::endl;
     fd_set rfds;
 
-
-
     
     while (serverRunning_)
     {
         std::cout << "server tick" << std::endl;
         FD_ZERO(&rfds);
 
-        // need to generalize this to work with all server types
-        
         // add our socket fd, and the pipe fd
         FD_SET(sock_, &rfds);
         FD_SET(pipeFd_[0], &rfds);
@@ -80,7 +77,7 @@ void UnixDgramServerSockEP::runServer()
             { // external message - read from socket and add client
                 
                 // create a new client
-                IClientSockEP *newClient = createNewClient();
+                ISSClientSockEP *newClient = createNewClient();
                 newClient->clearSaddr();
 
                 auto len = newClient->getSaddrLen();
@@ -113,10 +110,16 @@ void UnixDgramServerSockEP::runServer()
 
 }
 
+ISSClientSockEP *UnixDgramServerSockEP::createNewClient()
+{
+    return new UnixDgramClientSockEP();
+}
+
 void UnixDgramServerSockEP::sendMessageToClient(int clientId, std::string msg)
 {
     if (!isValid())
     {
+        std::cout << "Server is not valid" << std::endl;
         return;
     }
     // maybe if clientId == -1 then send message to all clients?
@@ -126,10 +129,12 @@ void UnixDgramServerSockEP::sendMessageToClient(int clientId, std::string msg)
 
     if (clientIt == clients_.end())
     {
+        std::cout << "Could not find client with id " << clientId << std::endl;
         // not found
         return;
     }
-    sendto(sock_, msg.c_str(), msg.length(), 0, (struct sockaddr *) &clientIt->second, sizeof(clientIt->second));
+    std::cout << "sending to " << clientIt->second << std::endl;
+    sendto(sock_, msg.c_str(), msg.length(), 0, clientIt->second->getSaddr(), clientIt->second->getSaddrLen());
     
 }
 

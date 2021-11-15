@@ -34,17 +34,38 @@ UnixDgramClientSockEP::UnixDgramClientSockEP(std::string bindPath, std::string s
     isValid_ = true;
 }
 
+// for server side client creation
+UnixDgramClientSockEP::UnixDgramClientSockEP() {}
+
+/******* BOTH INTERFACES **********/
 void UnixDgramClientSockEP::sendMessage(std::string msg)
-{
-    
+{    
     sendto(sock_, msg.c_str(), msg.size(), 0, (struct sockaddr *) &serverSaddr_, sizeof(serverSaddr_));
 }
 
+/******* CLIENT INTERFACE **********/
 std::string UnixDgramClientSockEP::getMessage()
 {
     socklen_t serverSaddrLen = sizeof(struct sockaddr_un);
     
     recvfrom(sock_, msg_, sizeof(msg_), 0, (struct sockaddr *) &serverSaddr_, &serverSaddrLen);
     return msg_;
+}
+
+/******* SERVER SIDE CLIENT INTERFACE *********/
+
+void UnixDgramClientSockEP::clearSaddr()
+{
+    memset(&saddr_, 0, sizeof(struct sockaddr_un));
+}
+
+struct sockaddr * UnixDgramClientSockEP::getSaddr()
+{
+    return (struct sockaddr *) &saddr_;
+}
+
+socklen_t UnixDgramClientSockEP::getSaddrLen()
+{
+    return sizeof(saddr_);
 }
 

@@ -21,14 +21,15 @@ public:
     ~ClientSockEP() {};
 
     bool isValid() override {return isValid_;};
-    bool operator== (IClientSockEP const *other) override {return true;};
+    virtual void sendMessage(std::string msg) override = 0;
+    virtual std::string getMessage() override = 0;
+    virtual std::string to_str() override = 0;
 
-    virtual void sendMessage(std::string msg) = 0;
-    virtual std::string getMessage() = 0;
-    virtual void clearSaddr() override = 0;
-    virtual struct sockaddr * getSaddr() override = 0;
-    virtual socklen_t getSaddrLen() override = 0;
-    virtual std::string to_str() override {std::string s = "hello"; return s;};
+    // to meet server side client interface (ISSClientSockEP)
+    // bool operator== (ISSClientSockEP const *other) override {return true;};
+    // virtual void clearSaddr() override = 0;
+    // virtual struct sockaddr * getSaddr() override = 0;
+    // virtual socklen_t getSaddrLen() override = 0;
 
 protected:
 

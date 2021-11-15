@@ -27,7 +27,7 @@ void ServerSockEP::closeSocket()
     isValid_ = false;
 }
 
-int ServerSockEP::addClient(IClientSockEP *newClient)
+int ServerSockEP::addClient(ISSClientSockEP *newClient)
 {
     // find if client already exists
     std::lock_guard<std::mutex> lock(clientsMutex_);

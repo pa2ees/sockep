@@ -1,7 +1,7 @@
 #pragma once
 
 #include "server/IServerSockEP.h"
-#include "client/IClientSockEP.h"
+#include "client/ISSClientSockEP.h"
 
 #include <atomic>
 #include <map>
@@ -36,7 +36,7 @@ public:
     virtual std::string to_str() override {std::string s = "howdy"; return s;};
 
 protected:
-    virtual int addClient(IClientSockEP * newClient);
+    virtual int addClient(ISSClientSockEP * newClient);
     virtual void runServer() = 0;
     virtual void closeSocket();
 
@@ -44,7 +44,7 @@ protected:
     // virtual void handleNewClient(IClientSockEP *newClient) = 0;
 
     // allow concrete class to create the proper type of client
-    virtual IClientSockEP* createNewClient() = 0;
+    virtual ISSClientSockEP* createNewClient() = 0;
 
     ServerSockEPType sockType_;
     std::atomic<bool> serverRunning_;
@@ -52,7 +52,8 @@ protected:
     bool isValid_ = false;
     char msg_[1000];
 
-    std::map<int, IClientSockEP *> clients_;
+    // this should probably hold a unique pointer
+    std::map<int, ISSClientSockEP *> clients_;
     std::mutex clientsMutex_;
     std::thread serverThread_;
     void (*callback_)(int, std::string);
