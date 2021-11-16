@@ -43,6 +43,11 @@ void UnixDgramClientSockEP::sendMessage(std::string msg)
     sendto(sock_, msg.c_str(), msg.size(), 0, (struct sockaddr *) &serverSaddr_, sizeof(serverSaddr_));
 }
 
+std::string UnixDgramClientSockEP::to_str()
+{
+    return saddr_.sun_path;
+}
+
 /******* CLIENT INTERFACE **********/
 std::string UnixDgramClientSockEP::getMessage()
 {

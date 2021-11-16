@@ -15,7 +15,7 @@ public:
 
     // for both interfaces (Client and Server Side Client)
     void sendMessage(std::string msg) override;
-    std::string to_str() override {std::string s = "hello"; return s;};
+    std::string to_str() override;
 
     // for Client interface
     std::string getMessage() override;
