@@ -15,7 +15,6 @@ public:
     UnixDgramClientSockEP(); // for server side client creation
 
     // for both interfaces (Client and Server Side Client)
-    // void sendMessage(char* msg, size_t msgLen) override;
     void sendMessage(const char* msg, size_t msgLen) override;
     void sendMessage(const std::string &msg) override;
     std::string to_str() const override;

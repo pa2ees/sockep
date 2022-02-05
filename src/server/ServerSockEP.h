@@ -24,8 +24,6 @@ enum class ServerSockEPType
 class ServerSockEP : public IServerSockEP
 {
 public:
-    // ServerSockEP(void (*callback)(int, uint8_t*, size_t));
-    // ServerSockEP(std::function<void(int, char*, size_t)> callback);
     ServerSockEP(std::function<void(int, const char*, size_t)> callback);
     ~ServerSockEP();
 
@@ -35,7 +33,6 @@ public:
     virtual void stopServer() override;
     bool serverRunning() override;
 
-    // virtual void sendMessageToClient(int clientId, char* msg, size_t msgLen) override = 0;
     virtual void sendMessageToClient(int clientId, const char* msg, size_t msgLen) override = 0;
     virtual void sendMessageToClient(int clientId, const std::string &msg) override = 0;
     virtual std::vector<int> getClientIds() override;
@@ -45,9 +42,6 @@ protected:
     virtual int addClient(ISSClientSockEP * newClient);
     virtual void runServer() = 0;
     virtual void closeSocket();
-
-    // do something with a brand-new client
-    // virtual void handleNewClient(IClientSockEP *newClient) = 0;
 
     // allow concrete class to create the proper type of client
     virtual ISSClientSockEP* createNewClient() = 0;
@@ -62,8 +56,6 @@ protected:
     std::map<int, ISSClientSockEP *> clients_;
     std::mutex clientsMutex_;
     std::thread serverThread_;
-    // void (*callback_)(int, uint8_t*, size_t);
-    // std::function<void(int, char*, size_t)> callback_;
     std::function<void(int, const char*, size_t)> callback_;
     int pipeFd_[2];
 };

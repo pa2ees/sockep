@@ -11,12 +11,6 @@
 
 using namespace sockep;
 
-// IServerSockEP *SockEPFactory::createServerSockEP()
-// {
-//     IServerSockEP *val;
-//     return val;
-// }
-// IServerSockEP *SockEPFactory::createUnixDgramServerSockEP(std::string bindPath, void (*callback)(int, uint8_t*, size_t))
 IServerSockEP *SockEPFactory::createUnixDgramServerSockEP(std::string bindPath, std::function<void(int, const char*, size_t)> callback)
 {
     return new UnixDgramServerSockEP(bindPath, callback);

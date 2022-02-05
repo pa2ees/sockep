@@ -106,8 +106,6 @@ void UnixDgramServerSockEP::runServer()
         }
         
     }
-
-
 }
 
 ISSClientSockEP *UnixDgramServerSockEP::createNewClient()

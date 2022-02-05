@@ -27,18 +27,5 @@ private:
     struct sockaddr_un saddr_;
     socklen_t slen_;
 
-    // std::atomic<bool> serverRunning_;
-    
-    // SockEPType sockType_;
-    // int sock_ = -1;
-    // bool isValid_ = false;
-    // char msg_[1000];
-
-    // need to create an actual client class to store messages in
-    // std::map<int, struct sockaddr_un> clients_;
-    // std::mutex clientsMutex_;
-    // std::thread serverThread_;
-    // void (*callback_)(int, std::string);
-    // int pipeFd_[2];
 };
 }

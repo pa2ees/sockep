@@ -52,7 +52,6 @@ int ServerSockEP::addClient(ISSClientSockEP *newClient)
     }
     std::cout << "Inserting client with ID " << clientId << " and address " << newClient->to_str() << std::endl; 
     clients_.emplace(clientId, newClient);
-    // handleNewClient(newClient);
     return clientId;
 }
 
@@ -89,31 +88,6 @@ bool ServerSockEP::serverRunning()
 {
     return serverRunning_;
 }
-
-// void ServerSockEP::sendMessageToClient(int clientId, std::string msg)
-// {
-//     if (!isValid())
-//     {
-//         return;
-//     }
-//     // maybe if clientId == -1 then send message to all clients?
-//     clientsMutex_.lock();
-//     auto clientIt = clients_.find(clientId);
-//     clientsMutex_.unlock();
-
-//     if (clientIt == clients_.end())
-//     {
-//         // not found
-//         return;
-//     }
-//     // here's where it gets hard? dgram servers need to send using their own socket
-//     // but stream servers send using the "client" socket
-//     // maybe sendMessageToClient(IClientSockEP *client, std::string msg)
-//     // what about different threads trying to send using the same client?
-//     // client should have a "send mutex"?
-//     sendto(sock_, msg.c_str(), msg.length(), 0, (struct sockaddr *) &clientIt->second, sizeof(clientIt->second));
-    
-// }
 
 std::vector<int> ServerSockEP::getClientIds()
 {
