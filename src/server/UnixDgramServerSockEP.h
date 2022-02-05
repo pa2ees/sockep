@@ -3,6 +3,7 @@
 #include "ServerSockEP.h"
 
 #include <sys/un.h>
+#include <functional>
 
 namespace sockep
 {
@@ -10,10 +11,12 @@ namespace sockep
 class UnixDgramServerSockEP : public ServerSockEP
 {
 public:
-    UnixDgramServerSockEP(std::string bindPath, void (*callback)(int,std::string) = nullptr);
+    // UnixDgramServerSockEP(std::string bindPath, void (*callback)(int, uint8_t*, size_t) = nullptr);
+    UnixDgramServerSockEP(std::string bindPath, std::function<void(int, const char*, size_t)> callback = nullptr);
     ~UnixDgramServerSockEP();
 
-    void sendMessageToClient(int clientId, std::string msg) override;
+    void sendMessageToClient(int clientId, const char* msg, size_t msgLen) override;
+    void sendMessageToClient(int clientId, const std::string &msg) override;
 
 private:
 

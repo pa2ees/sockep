@@ -7,6 +7,8 @@
 #include "server/UnixDgramServerSockEP.h"
 #include "client/UnixDgramClientSockEP.h"
 
+#include <functional>
+
 using namespace sockep;
 
 // IServerSockEP *SockEPFactory::createServerSockEP()
@@ -14,7 +16,8 @@ using namespace sockep;
 //     IServerSockEP *val;
 //     return val;
 // }
-IServerSockEP *SockEPFactory::createUnixDgramServerSockEP(std::string bindPath, void (*callback)(int, std::string))
+// IServerSockEP *SockEPFactory::createUnixDgramServerSockEP(std::string bindPath, void (*callback)(int, uint8_t*, size_t))
+IServerSockEP *SockEPFactory::createUnixDgramServerSockEP(std::string bindPath, std::function<void(int, const char*, size_t)> callback)
 {
     return new UnixDgramServerSockEP(bindPath, callback);
 }

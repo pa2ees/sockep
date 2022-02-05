@@ -2,10 +2,18 @@
 
 #include <iostream>
 
-int main()
+int main(int argc, char *argv[])
 {
-    sockep::IClientSockEP *client = sockep::SockEPFactory::createUnixDgramClientSockEP("/tmp/fartclient", "/tmp/fartserver");
-
+    sockep::IClientSockEP *client;
+    if (argc > 1)
+    {
+        client = sockep::SockEPFactory::createUnixDgramClientSockEP(argv[1], "/tmp/fartserver");
+    }
+    else
+    {
+        client = sockep::SockEPFactory::createUnixDgramClientSockEP("/tmp/fartclient", "/tmp/fartserver");
+    }
+    
     std::cout << "Client valid: " << (client->isValid() ? "true" : "false") << std::endl;
 
     std::string inp;
@@ -14,11 +22,15 @@ int main()
         std::cout << "> ";
         std::getline(std::cin, inp);
 
-        client->sendMessage(inp);
+        client->sendMessage(inp);//inp.c_str(), inp.size());
 
         if (inp == "quit")
         {
             break;
+        }
+        if (inp == "read")
+        {
+            std::cout << client->getMessage() << "\n";
         }
     }
     // client->sendMessage("Hello Socket!");

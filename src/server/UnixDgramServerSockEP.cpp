@@ -6,9 +6,9 @@
 
 using namespace sockep;
 
-UnixDgramServerSockEP::UnixDgramServerSockEP(std::string bindPath, void (*callback)(int, std::string)) : ServerSockEP(callback), slen_{sizeof(saddr_)}
+// UnixDgramServerSockEP::UnixDgramServerSockEP(std::string bindPath, void (*callback)(int, uint8_t*, size_t)) : ServerSockEP(callback), slen_{sizeof(saddr_)}
+UnixDgramServerSockEP::UnixDgramServerSockEP(std::string bindPath, std::function<void(int, const char*, size_t)> callback) : ServerSockEP(callback), slen_{sizeof(saddr_)}
 {
-
     std::cout << "Constructing Unix Datagram Server Socket..." << std::endl;
 
     memset(&saddr_, 0, sizeof(struct sockaddr_un));
@@ -90,7 +90,7 @@ void UnixDgramServerSockEP::runServer()
                 
                 if (callback_)
                 {
-                    callback_(clientId, msg_);
+                    callback_(clientId, msg_, bytesReceived);
                 }
             }
             else if (FD_ISSET(pipeFd_[0], &rfds))
@@ -115,7 +115,7 @@ ISSClientSockEP *UnixDgramServerSockEP::createNewClient()
     return new UnixDgramClientSockEP();
 }
 
-void UnixDgramServerSockEP::sendMessageToClient(int clientId, std::string msg)
+void UnixDgramServerSockEP::sendMessageToClient(int clientId, const char* msg, size_t msgLen)
 {
     if (!isValid())
     {
@@ -134,7 +134,11 @@ void UnixDgramServerSockEP::sendMessageToClient(int clientId, std::string msg)
         return;
     }
     std::cout << "sending to " << clientIt->second << std::endl;
-    sendto(sock_, msg.c_str(), msg.length(), 0, clientIt->second->getSaddr(), clientIt->second->getSaddrLen());
+    sendto(sock_, msg, msgLen, 0, clientIt->second->getSaddr(), clientIt->second->getSaddrLen());
     
 }
 
+void UnixDgramServerSockEP::sendMessageToClient(int clientId, const std::string &msg)
+{
+    sendMessageToClient(clientId, msg.c_str(), msg.size());
+}

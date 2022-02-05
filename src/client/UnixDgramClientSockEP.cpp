@@ -38,12 +38,17 @@ UnixDgramClientSockEP::UnixDgramClientSockEP(std::string bindPath, std::string s
 UnixDgramClientSockEP::UnixDgramClientSockEP() {}
 
 /******* BOTH INTERFACES **********/
-void UnixDgramClientSockEP::sendMessage(std::string msg)
+void UnixDgramClientSockEP::sendMessage(const char* msg, size_t msgLen)
 {    
-    sendto(sock_, msg.c_str(), msg.size(), 0, (struct sockaddr *) &serverSaddr_, sizeof(serverSaddr_));
+    sendto(sock_, msg, msgLen, 0, (struct sockaddr *) &serverSaddr_, sizeof(serverSaddr_));
 }
 
-std::string UnixDgramClientSockEP::to_str()
+void UnixDgramClientSockEP::sendMessage(const std::string &msg)
+{
+    sendMessage(msg.c_str(), msg.size());
+}
+
+std::string UnixDgramClientSockEP::to_str() const
 {
     return saddr_.sun_path;
 }
@@ -57,19 +62,36 @@ std::string UnixDgramClientSockEP::getMessage()
     return msg_;
 }
 
+void UnixDgramClientSockEP::getMessage(char* msg, const int msgMaxLen)
+{
+    socklen_t serverSaddrLen = sizeof(struct sockaddr_un);
+    
+    recvfrom(sock_, msg, msgMaxLen, 0, (struct sockaddr *) &serverSaddr_, &serverSaddrLen);
+}
+
 /******* SERVER SIDE CLIENT INTERFACE *********/
+
+bool UnixDgramClientSockEP::operator== (ISSClientSockEP const *other)
+{
+    std::cout << "Comparing " << to_str() << " and " << other->to_str() << " with length " << other->getSaddrLen() << "\n";
+    if (memcmp(&saddr_, other->getSaddr(), other->getSaddrLen()) == 0)
+    {
+        return true;
+    }
+    return false;
+};
 
 void UnixDgramClientSockEP::clearSaddr()
 {
     memset(&saddr_, 0, sizeof(struct sockaddr_un));
 }
 
-struct sockaddr * UnixDgramClientSockEP::getSaddr()
+struct sockaddr * UnixDgramClientSockEP::getSaddr() const
 {
     return (struct sockaddr *) &saddr_;
 }
 
-socklen_t UnixDgramClientSockEP::getSaddrLen()
+socklen_t UnixDgramClientSockEP::getSaddrLen() const
 {
     return sizeof(saddr_);
 }

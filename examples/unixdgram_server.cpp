@@ -7,11 +7,12 @@
 bool running = true;
 sockep::IServerSockEP *srvr;
 
-void messageHandler(int clientId, std::string msg)
+void messageHandler(int clientId, const char* msg, size_t msgLen)
 {
-    std::cout << "Got message from client " << clientId << ": " << msg << std::endl;
+    std::string message(msg, msgLen);
+    std::cout << "Got message from client " << clientId << ": " << message << std::endl;
     srvr->sendMessageToClient(clientId, "Got your message, Hello!!");
-    if (msg == "quit")
+    if (message == "quit")
     {
         running = false;
     }

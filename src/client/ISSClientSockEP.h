@@ -13,12 +13,13 @@ class ISSClientSockEP
 public:
     ~ISSClientSockEP() {};
 
-    virtual void sendMessage(std::string msg) = 0;
+    virtual void sendMessage(const char* msg, size_t msgLen) = 0;
+    virtual void sendMessage(const std::string &msg) = 0;
     virtual bool operator== (ISSClientSockEP const *other) = 0;
     virtual void clearSaddr() = 0;
-    virtual struct sockaddr * getSaddr() = 0;
-    virtual socklen_t getSaddrLen() = 0;
-    virtual std::string to_str() = 0;
+    virtual struct sockaddr * getSaddr() const = 0;
+    virtual socklen_t getSaddrLen() const = 0;
+    virtual std::string to_str() const = 0;
 
 };
 

@@ -6,7 +6,8 @@
 
 using namespace sockep;
 
-ServerSockEP::ServerSockEP(void (*callback)(int, std::string)) : callback_{callback}
+// ServerSockEP::ServerSockEP(void (*callback)(int, uint8_t*, size_t)) : callback_{callback}
+ServerSockEP::ServerSockEP(std::function<void(int, const char*, size_t)> callback) : callback_{callback}
 {}
 
 ServerSockEP::~ServerSockEP()
@@ -30,11 +31,13 @@ void ServerSockEP::closeSocket()
 int ServerSockEP::addClient(ISSClientSockEP *newClient)
 {
     // find if client already exists
+    std::cout << "Looking for client " << newClient->to_str() << "\n";
     std::lock_guard<std::mutex> lock(clientsMutex_);
         
     for (auto client : clients_)
     {
-        if (client.second == newClient) //strcmp(client.second.sun_path, clientSaddr.sun_path) == 0)
+        std::cout << "Found client " << client.second << "\n";
+        if (client.second != nullptr && *client.second == newClient) //strcmp(client.second.sun_path, clientSaddr.sun_path) == 0)
         {
             // client already in list, return id.
             return client.first;

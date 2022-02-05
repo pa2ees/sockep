@@ -7,6 +7,8 @@
 #include <map>
 #include <thread>
 #include <mutex>
+#include <cstring>
+#include <functional>
 
 namespace sockep
 {
@@ -22,7 +24,9 @@ enum class ServerSockEPType
 class ServerSockEP : public IServerSockEP
 {
 public:
-    ServerSockEP(void (*callback)(int, std::string));
+    // ServerSockEP(void (*callback)(int, uint8_t*, size_t));
+    // ServerSockEP(std::function<void(int, char*, size_t)> callback);
+    ServerSockEP(std::function<void(int, const char*, size_t)> callback);
     ~ServerSockEP();
 
     bool isValid() override {return isValid_;};
@@ -31,7 +35,9 @@ public:
     virtual void stopServer() override;
     bool serverRunning() override;
 
-    virtual void sendMessageToClient(int clientId, std::string msg) override = 0;
+    // virtual void sendMessageToClient(int clientId, char* msg, size_t msgLen) override = 0;
+    virtual void sendMessageToClient(int clientId, const char* msg, size_t msgLen) override = 0;
+    virtual void sendMessageToClient(int clientId, const std::string &msg) override = 0;
     virtual std::vector<int> getClientIds() override;
     virtual std::string to_str() override {std::string s = "howdy"; return s;};
 
@@ -56,7 +62,9 @@ protected:
     std::map<int, ISSClientSockEP *> clients_;
     std::mutex clientsMutex_;
     std::thread serverThread_;
-    void (*callback_)(int, std::string);
+    // void (*callback_)(int, uint8_t*, size_t);
+    // std::function<void(int, char*, size_t)> callback_;
+    std::function<void(int, const char*, size_t)> callback_;
     int pipeFd_[2];
 };
 }
