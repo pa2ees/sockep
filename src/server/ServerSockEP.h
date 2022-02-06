@@ -47,7 +47,7 @@ protected:
     virtual ISSClientSockEP* createNewClient() = 0;
 
     ServerSockEPType sockType_;
-    std::atomic<bool> serverRunning_;
+    std::atomic<bool> serverRunning_ {false};
     int sock_ = -1;
     bool isValid_ = false;
     char msg_[1000];
