@@ -2,11 +2,10 @@
 #include "client/UnixDgramClientSockEP.h" // so server can create new server side clients
 #include <iostream>
 #include <sys/socket.h>
-#include <sys/select.h>
+#include <sys/poll.h>
 
 using namespace sockep;
 
-// UnixDgramServerSockEP::UnixDgramServerSockEP(std::string bindPath, void (*callback)(int, uint8_t*, size_t)) : ServerSockEP(callback), slen_{sizeof(saddr_)}
 UnixDgramServerSockEP::UnixDgramServerSockEP(std::string bindPath, std::function<void(int, const char*, size_t)> callback) : ServerSockEP(callback), slen_{sizeof(saddr_)}
 {
     std::cout << "Constructing Unix Datagram Server Socket..." << std::endl;
@@ -53,30 +52,41 @@ void UnixDgramServerSockEP::runServer()
     std::cout << "Successfully started server thread" << std::endl;
     fd_set rfds;
 
+    // create the pollfds
+    std::vector<struct pollfd> pfds;
+
+    // create temporary pfd to add to vector
+    struct pollfd pfd;
+
+    // create listen socket
+    pfd.fd = sock_;
+    pfd.events = POLLIN;
+    pfds.push_back(pfd);
+
+    // create pipe socket
+    pfd.fd = pipeFd_[0];
+    pfd.events = 0; // only listen for POLLHUP (other end of pipe closed)
+    pfds.push_back(pfd);
     
     while (serverRunning_)
     {
         std::cout << "server tick" << std::endl;
-        FD_ZERO(&rfds);
 
-        // add our socket fd, and the pipe fd
-        FD_SET(sock_, &rfds);
-        FD_SET(pipeFd_[0], &rfds);
-
-        std::cout << "calling select..." << std::endl;
-        int selectStatus = select(FD_SETSIZE, &rfds, NULL, NULL, NULL);
-        if (selectStatus == -1)
+        // -1 == no timeout
+        int pollStatus = poll(pfds.data(), pfds.size(), -1);
+        if (pollStatus == -1)
         {
-            perror("problem with select");
+            perror("problem with poll");
             serverRunning_ = false;
+            break;
         }
-        else
-        { // one of the file handles is ready to read
-            
-            if (FD_ISSET(sock_, &rfds))
-            { // external message - read from socket and add client
-                
-                // create a new client
+
+        for (auto pfd : pfds)
+        {
+            std::cout << "Fd: " << pfd.fd << " | events: " << pfd.events << " | revents : " << pfd.revents << "\n";
+            // handle receive socket
+            if (pfd.fd == sock_ && pfd.revents & POLLIN)
+            { // new client connection
                 ISSClientSockEP *newClient = createNewClient();
                 newClient->clearSaddr();
 
@@ -93,18 +103,19 @@ void UnixDgramServerSockEP::runServer()
                     callback_(clientId, msg_, bytesReceived);
                 }
             }
-            else if (FD_ISSET(pipeFd_[0], &rfds))
-            { // internal message
+            else if (pfd.fd == pipeFd_[0] && pfd.revents & POLLHUP)
+            { // need to terminate
                 serverRunning_ = false;
                 std::cout << "stopping server" << std::endl;
+                break;
             }
-            else
+            else if (pfd.fd != sock_ && pfd.fd != pipeFd_[0])
             {
                 std::cout << "No idea what happened here" << std::endl;
                 serverRunning_ = false;
+                break;
             }
         }
-        
     }
 }
 
