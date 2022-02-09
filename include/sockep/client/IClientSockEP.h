@@ -16,7 +16,7 @@ public:
     virtual void sendMessage(const char* msg, size_t msgLen) = 0;
     virtual void sendMessage(const std::string &msg) = 0;
     virtual std::string getMessage() = 0;
-    virtual void getMessage(char* msg, const int msgMaxLen) = 0;
+    virtual int getMessage(char* msg, const int msgMaxLen) = 0;
     virtual std::string to_str() const = 0;
 
 };

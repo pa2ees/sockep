@@ -24,7 +24,7 @@ public:
     virtual void sendMessage(const char* msg, size_t msgLen) override = 0;
     virtual void sendMessage(const std::string &msg) override = 0;
     virtual std::string getMessage() override = 0;
-    virtual void getMessage(char* msg, const int msgMaxLen) override = 0;
+    virtual int getMessage(char* msg, const int msgMaxLen) override = 0;
     virtual std::string to_str() const override = 0;
 
 protected:

@@ -8,11 +8,11 @@
 namespace sockep
 {
     
-class UnixDgramClientSockEP : public ClientSockEP, public ISSClientSockEP
+class UnixStreamClientSockEP : public ClientSockEP, public ISSClientSockEP
 {
 public:
-    UnixDgramClientSockEP(std::string bindPath, std::string serverPath);
-    UnixDgramClientSockEP(); // for server side client creation
+    UnixStreamClientSockEP(std::string bindPath, std::string serverPath);
+    UnixStreamClientSockEP(); // for server side client creation
 
     // for both interfaces (Client and Server Side Client)
     void sendMessage(const char* msg, size_t msgLen) override;
@@ -28,8 +28,9 @@ public:
     void clearSaddr() override;
     struct sockaddr * getSaddr() const override;
     socklen_t getSaddrLen() const override;
-    void setSock(int sock) override {};
-    int getSock() const override { return -1; }
+
+    void setSock(int sock) override;
+    int getSock() const override;
 
 private:
     struct sockaddr_un saddr_;

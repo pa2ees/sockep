@@ -8,6 +8,7 @@ target_sources(sockep PRIVATE
 SockEPFactory.cpp
 server/ServerSockEP.cpp
 server/UnixDgramServerSockEP.cpp
-# client/ClientSockEP.cpp
+server/UnixStreamServerSockEP.cpp
 client/UnixDgramClientSockEP.cpp
+client/UnixStreamClientSockEP.cpp
 )

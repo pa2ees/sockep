@@ -16,8 +16,8 @@ private:
 public:
     static IServerSockEP *createUnixDgramServerSockEP(std::string bindPath, std::function<void(int, const char*, size_t)> callback);
     static IClientSockEP *createUnixDgramClientSockEP(std::string bindPath, std::string serverPath);
-    // static IServerSockEP *createUnixStreamServerSockEP(std::string bindPath);
-    // static IClientSockEP *createUnixStreamClientSockEP(std::string serverPath);
+    static IServerSockEP *createUnixStreamServerSockEP(std::string bindPath, std::function<void(int, const char*, size_t)> callback);
+    static IClientSockEP *createUnixStreamClientSockEP(std::string bindPath, std::string serverPath);
     // static ISockEP *createUnixDgramSocket();
     // static ISockEP *createUnixStreamSocket();
     // static ISockEP *createTCPSocket();

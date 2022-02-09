@@ -62,7 +62,7 @@ std::string UnixDgramClientSockEP::getMessage()
     return msg_;
 }
 
-void UnixDgramClientSockEP::getMessage(char* msg, const int msgMaxLen)
+int UnixDgramClientSockEP::getMessage(char* msg, const int msgMaxLen)
 {
     socklen_t serverSaddrLen = sizeof(struct sockaddr_un);
     
