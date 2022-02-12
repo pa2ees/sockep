@@ -97,7 +97,7 @@ void UnixStreamServerSockEP::runServer()
             // handle receive socket
             if (pfd.fd == sock_ && pfd.revents & POLLIN)
             { // new client connection
-                ISSClientSockEP *newClient = createNewClient();
+                std::unique_ptr<ISSClientSockEP> newClient = createNewClient();
                 if (newClient == nullptr)
                 { // something went wrong with the creation of the client
                     continue;
@@ -110,15 +110,9 @@ void UnixStreamServerSockEP::runServer()
                 newPfds.push_back(pfd);
 
                 clientsMutex_.lock();
-                clients_[pfd.fd] = newClient;
+                clients_[pfd.fd] = std::move(newClient);
                 clientsMutex_.unlock();
-                // this will always return the client id, whether it's already exists or not
-                // int clientId = addClient(newClient);
-                
-                // if (callback_)
-                // {
-                //     callback_(clientId, msg_, bytesReceived);
-                // }
+
             }
             else if (pfd.fd == pipeFd_[0] && pfd.revents & POLLHUP)
             { // need to terminate
@@ -128,16 +122,16 @@ void UnixStreamServerSockEP::runServer()
             }
             else if (pfd.fd != sock_ && pfd.fd != pipeFd_[0])
             {
-                clientsMutex_.lock();
-                auto client = clients_[pfd.fd];
-                clientsMutex_.unlock();
+                //auto client = clients_[pfd.fd];
 
                 if (pfd.revents & POLLIN)
                 { // data to read
                     std::cout << "Got message from socket " << pfd.fd << "\n";
 
-                    int bytesReceived = client->getMessage(msg_, sizeof(msg_));
+                    clientsMutex_.lock();
+                    int bytesReceived = clients_[pfd.fd]->getMessage(msg_, sizeof(msg_));
                     // int bytesReceived = recv(pfd.fd, msg_, sizeof(msg_), 0);
+                    clientsMutex_.unlock();
                     
                     if (callback_)
                     {
@@ -150,7 +144,6 @@ void UnixStreamServerSockEP::runServer()
                     clientsMutex_.lock();
                     removePfds.push_back(pfd);
                     clients_.erase(pfd.fd);
-                    delete client;
 
                     clientsMutex_.unlock();
 
@@ -183,9 +176,9 @@ void UnixStreamServerSockEP::runServer()
     }
 }
 
-ISSClientSockEP *UnixStreamServerSockEP::createNewClient()
+std::unique_ptr<ISSClientSockEP> UnixStreamServerSockEP::createNewClient()
 {
-    UnixStreamClientSockEP *newClient = new UnixStreamClientSockEP();
+    std::unique_ptr<UnixStreamClientSockEP> newClient = std::unique_ptr<UnixStreamClientSockEP> (new UnixStreamClientSockEP());
     
     newClient->clearSaddr();
 
@@ -195,7 +188,6 @@ ISSClientSockEP *UnixStreamServerSockEP::createNewClient()
     if (newClientSock == -1)
     { // failed to create socket for new client
         std::cerr << "Failed to create socket for new client\n";
-        delete newClient;
         return nullptr;
     }
     newClient->setSock(newClientSock);
@@ -221,7 +213,7 @@ void UnixStreamServerSockEP::sendMessageToClient(int clientId, const char* msg, 
         // not found
         return;
     }
-    std::cout << "sending to " << clientIt->second << std::endl;
+    std::cout << "sending to " << clientIt->second->to_str() << std::endl;
     sendto(sock_, msg, msgLen, 0, clientIt->second->getSaddr(), clientIt->second->getSaddrLen());
     
 }

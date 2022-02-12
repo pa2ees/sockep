@@ -4,7 +4,7 @@
 
 int main(int argc, char *argv[])
 {
-    sockep::IClientSockEP *client;
+    std::unique_ptr<sockep::IClientSockEP> client;
     if (argc > 1)
     {
         client = sockep::SockEPFactory::createUnixDgramClientSockEP(argv[1], "/tmp/fartserver");

@@ -87,7 +87,7 @@ void UnixDgramServerSockEP::runServer()
             // handle receive socket
             if (pfd.fd == sock_ && pfd.revents & POLLIN)
             { // new client connection
-                ISSClientSockEP *newClient = createNewClient();
+                std::unique_ptr<ISSClientSockEP> newClient = createNewClient();
                 newClient->clearSaddr();
 
                 auto len = newClient->getSaddrLen();
@@ -96,7 +96,7 @@ void UnixDgramServerSockEP::runServer()
                 std::cout << "Received " << bytesReceived << " bytes from " << newClient->to_str() << std::endl;
 
                 // this will always return the client id, whether it's already exists or not
-                int clientId = addClient(newClient);
+                int clientId = addClient(std::move(newClient));
                 
                 if (callback_)
                 {
@@ -119,9 +119,9 @@ void UnixDgramServerSockEP::runServer()
     }
 }
 
-ISSClientSockEP *UnixDgramServerSockEP::createNewClient()
+std::unique_ptr<ISSClientSockEP> UnixDgramServerSockEP::createNewClient()
 {
-    return new UnixDgramClientSockEP();
+    return std::unique_ptr<UnixDgramClientSockEP> (new UnixDgramClientSockEP());
 }
 
 void UnixDgramServerSockEP::sendMessageToClient(int clientId, const char* msg, size_t msgLen)
@@ -142,7 +142,7 @@ void UnixDgramServerSockEP::sendMessageToClient(int clientId, const char* msg, s
         // not found
         return;
     }
-    std::cout << "sending to " << clientIt->second << std::endl;
+    std::cout << "sending to " << clientIt->second->to_str() << std::endl;
     sendto(sock_, msg, msgLen, 0, clientIt->second->getSaddr(), clientIt->second->getSaddrLen());
     
 }

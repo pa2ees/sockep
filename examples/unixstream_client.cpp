@@ -1,17 +1,18 @@
 #include "sockep/SockEPFactory.h"
 
 #include <iostream>
+#include <memory>
 
 int main(int argc, char *argv[])
 {
-    sockep::IClientSockEP *client;
+    std::unique_ptr<sockep::IClientSockEP> client;
     if (argc > 1)
     {
-        client = sockep::SockEPFactory::createUnixStreamClientSockEP(argv[1], "/tmp/fartserver");
+        client = std::unique_ptr<sockep::IClientSockEP>(sockep::SockEPFactory::createUnixStreamClientSockEP(argv[1], "/tmp/fartserver"));
     }
     else
     {
-        client = sockep::SockEPFactory::createUnixStreamClientSockEP("/tmp/fartclient", "/tmp/fartserver");
+        client = std::unique_ptr<sockep::IClientSockEP>(sockep::SockEPFactory::createUnixStreamClientSockEP("/tmp/fartclient", "/tmp/fartserver"));
     }
     
     std::cout << "Client valid: " << (client->isValid() ? "true" : "false") << std::endl;

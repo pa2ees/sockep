@@ -48,7 +48,6 @@ UnixStreamClientSockEP::UnixStreamClientSockEP() {}
 /******* BOTH INTERFACES **********/
 void UnixStreamClientSockEP::sendMessage(const char* msg, size_t msgLen)
 {    
-    // sendto(sock_, msg, msgLen, 0, (struct sockaddr *) &serverSaddr_, sizeof(serverSaddr_));
     send(sock_, msg, msgLen, 0);
 }
 
@@ -62,7 +61,6 @@ std::string UnixStreamClientSockEP::to_str() const
     return saddr_.sun_path;
 }
 
-/******* CLIENT INTERFACE **********/
 std::string UnixStreamClientSockEP::getMessage()
 {
     int bytesReceived = getMessage(msg_, sizeof(msg_));
@@ -70,6 +68,7 @@ std::string UnixStreamClientSockEP::getMessage()
     return receiveStr;
 }
 
+/******* CLIENT INTERFACE **********/
 int UnixStreamClientSockEP::getMessage(char* msg, const int msgMaxLen)
 {
     return recv(sock_, msg, msgMaxLen, 0);
@@ -85,6 +84,17 @@ bool UnixStreamClientSockEP::operator== (ISSClientSockEP const *other)
         return true;
     }
     return false;
+};
+
+bool UnixStreamClientSockEP::operator== (ISSClientSockEP const &other)
+{
+    return *this == &other;
+    // std::cout << "Comparing " << to_str() << " and " << other.to_str() << " with length " << other.getSaddrLen() << "\n";
+    // if (memcmp(&saddr_, other.getSaddr(), other.getSaddrLen()) == 0)
+    // {
+    //     return true;
+    // }
+    // return false;
 };
 
 void UnixStreamClientSockEP::clearSaddr()

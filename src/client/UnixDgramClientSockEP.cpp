@@ -66,7 +66,7 @@ int UnixDgramClientSockEP::getMessage(char* msg, const int msgMaxLen)
 {
     socklen_t serverSaddrLen = sizeof(struct sockaddr_un);
     
-    recvfrom(sock_, msg, msgMaxLen, 0, (struct sockaddr *) &serverSaddr_, &serverSaddrLen);
+    return recvfrom(sock_, msg, msgMaxLen, 0, (struct sockaddr *) &serverSaddr_, &serverSaddrLen);
 }
 
 /******* SERVER SIDE CLIENT INTERFACE *********/
@@ -80,6 +80,11 @@ bool UnixDgramClientSockEP::operator== (ISSClientSockEP const *other)
     }
     return false;
 };
+
+bool UnixDgramClientSockEP::operator== (ISSClientSockEP const &other)
+{
+    return *this == &other;
+}
 
 void UnixDgramClientSockEP::clearSaddr()
 {

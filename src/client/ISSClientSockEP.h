@@ -18,6 +18,7 @@ public:
     virtual std::string getMessage() = 0;
     virtual int getMessage(char* msg, const int msgMaxLen) = 0;
     virtual bool operator== (ISSClientSockEP const *other) = 0;
+    virtual bool operator== (ISSClientSockEP const &other) = 0;
     virtual void clearSaddr() = 0;
     virtual struct sockaddr * getSaddr() const = 0;
     virtual socklen_t getSaddrLen() const = 0;

@@ -25,6 +25,7 @@ public:
 
     // for Server Side Client interface
     bool operator== (ISSClientSockEP const *other) override;
+    bool operator== (ISSClientSockEP const &other) override;
     void clearSaddr() override;
     struct sockaddr * getSaddr() const override;
     socklen_t getSaddrLen() const override;

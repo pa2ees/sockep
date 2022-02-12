@@ -5,6 +5,11 @@ add_executable(unixdgram_client EXCLUDE_FROM_ALL)
 add_executable(unixstream_server EXCLUDE_FROM_ALL)
 add_executable(unixstream_client EXCLUDE_FROM_ALL)
 
+add_custom_target(examples
+  DEPENDS unixdgram_server unixdgram_client unixstream_server unixstream_client
+  )
+
+
 target_link_libraries(unixdgram_server PRIVATE sockep)
 target_link_libraries(unixdgram_client PRIVATE sockep)
 target_link_libraries(unixstream_server PRIVATE sockep)

@@ -5,7 +5,7 @@
 #include <unistd.h>
 
 bool running = true;
-sockep::IServerSockEP *srvr;
+std::unique_ptr<sockep::IServerSockEP> srvr;
 
 void messageHandler(int clientId, const char* msg, size_t msgLen)
 {
@@ -15,8 +15,7 @@ void messageHandler(int clientId, const char* msg, size_t msgLen)
     if (message == "quit")
     {
         running = false;
-    }
-    
+    }    
 }
 
 int main()

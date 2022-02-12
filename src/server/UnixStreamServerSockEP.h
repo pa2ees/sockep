@@ -21,7 +21,7 @@ private:
 
     void runServer() override; // meant to be the function for the receive thread
 
-    ISSClientSockEP* createNewClient() override;
+    std::unique_ptr<ISSClientSockEP> createNewClient() override;
 
     struct sockaddr_un saddr_;
     socklen_t slen_;

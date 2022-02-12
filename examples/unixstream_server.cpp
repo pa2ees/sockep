@@ -3,9 +3,10 @@
 #include <iostream>
 #include <string>
 #include <unistd.h>
+#include <memory>
 
 bool running = true;
-sockep::IServerSockEP *srvr;
+std::unique_ptr<sockep::IServerSockEP> srvr;
 
 void messageHandler(int clientId, const char* msg, size_t msgLen)
 {
@@ -23,7 +24,7 @@ int main()
 {
     running = true;
 
-    srvr = sockep::SockEPFactory::createUnixStreamServerSockEP("/tmp/fartserver", messageHandler);
+    srvr = std::unique_ptr<sockep::IServerSockEP>(sockep::SockEPFactory::createUnixStreamServerSockEP("/tmp/fartserver", messageHandler));
 
     std::cout << "Server valid: " << (srvr->isValid() ? "true" : "false") << std::endl;
     srvr->startServer();

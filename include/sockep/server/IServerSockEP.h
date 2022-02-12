@@ -9,7 +9,7 @@ namespace sockep
 class IServerSockEP
 {
 public:
-    ~IServerSockEP() {};
+    virtual ~IServerSockEP() {};
     virtual bool isValid() = 0;
     virtual void startServer() = 0;
     virtual void stopServer() = 0;
