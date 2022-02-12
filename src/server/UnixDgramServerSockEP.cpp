@@ -8,7 +8,7 @@ using namespace sockep;
 
 UnixDgramServerSockEP::UnixDgramServerSockEP(std::string bindPath, std::function<void(int, const char*, size_t)> callback) : ServerSockEP(callback), slen_{sizeof(saddr_)}
 {
-    std::cout << "Constructing Unix Datagram Server Socket..." << std::endl;
+    // std::cout << "Constructing Unix Datagram Server Socket..." << std::endl;
 
     memset(&saddr_, 0, sizeof(struct sockaddr_un));
     strncpy(saddr_.sun_path, bindPath.c_str(), sizeof(saddr_.sun_path) - 1);
@@ -34,7 +34,7 @@ UnixDgramServerSockEP::UnixDgramServerSockEP(std::string bindPath, std::function
 
 UnixDgramServerSockEP::~UnixDgramServerSockEP()
 {
-    std::cout << "Destructor" << std::endl;
+    // std::cout << "Destructor" << std::endl;
     // close the socket
     closeSocket();
 }
@@ -49,7 +49,7 @@ void UnixDgramServerSockEP::runServer()
         return;
     }
 
-    std::cout << "Successfully started server thread" << std::endl;
+    // std::cout << "Successfully started server thread" << std::endl;
     fd_set rfds;
 
     // create the pollfds
@@ -70,7 +70,7 @@ void UnixDgramServerSockEP::runServer()
     
     while (serverRunning_)
     {
-        std::cout << "server tick" << std::endl;
+        // std::cout << "server tick" << std::endl;
 
         // -1 == no timeout
         int pollStatus = poll(pfds.data(), pfds.size(), -1);
@@ -83,7 +83,7 @@ void UnixDgramServerSockEP::runServer()
 
         for (auto pfd : pfds)
         {
-            std::cout << "Fd: " << pfd.fd << " | events: " << pfd.events << " | revents : " << pfd.revents << "\n";
+            // std::cout << "Fd: " << pfd.fd << " | events: " << pfd.events << " | revents : " << pfd.revents << "\n";
             // handle receive socket
             if (pfd.fd == sock_ && pfd.revents & POLLIN)
             { // new client connection
@@ -93,7 +93,7 @@ void UnixDgramServerSockEP::runServer()
                 auto len = newClient->getSaddrLen();
                 int bytesReceived = recvfrom(sock_, msg_, sizeof(msg_), 0, newClient->getSaddr(), &len);
                 msg_[bytesReceived] = '\0';
-                std::cout << "Received " << bytesReceived << " bytes from " << newClient->to_str() << std::endl;
+                // std::cout << "Received " << bytesReceived << " bytes from " << newClient->to_str() << std::endl;
 
                 // this will always return the client id, whether it's already exists or not
                 int clientId = addClient(std::move(newClient));
@@ -106,12 +106,12 @@ void UnixDgramServerSockEP::runServer()
             else if (pfd.fd == pipeFd_[0] && pfd.revents & POLLHUP)
             { // need to terminate
                 serverRunning_ = false;
-                std::cout << "stopping server" << std::endl;
+                // std::cout << "stopping server" << std::endl;
                 break;
             }
             else if (pfd.fd != sock_ && pfd.fd != pipeFd_[0])
             {
-                std::cout << "No idea what happened here" << std::endl;
+                std::cerr << "No idea what happened here" << std::endl;
                 serverRunning_ = false;
                 break;
             }
@@ -128,7 +128,7 @@ void UnixDgramServerSockEP::sendMessageToClient(int clientId, const char* msg, s
 {
     if (!isValid())
     {
-        std::cout << "Server is not valid" << std::endl;
+        std::cerr << "Server is not valid" << std::endl;
         return;
     }
     // maybe if clientId == -1 then send message to all clients?
@@ -138,11 +138,11 @@ void UnixDgramServerSockEP::sendMessageToClient(int clientId, const char* msg, s
 
     if (clientIt == clients_.end())
     {
-        std::cout << "Could not find client with id " << clientId << std::endl;
+        std::cerr << "Could not find client with id " << clientId << std::endl;
         // not found
         return;
     }
-    std::cout << "sending to " << clientIt->second->to_str() << std::endl;
+    // std::cout << "sending to " << clientIt->second->to_str() << std::endl;
     sendto(sock_, msg, msgLen, 0, clientIt->second->getSaddr(), clientIt->second->getSaddrLen());
     
 }

@@ -10,7 +10,7 @@ using namespace sockep;
 // UnixStreamServerSockEP::UnixStreamServerSockEP(std::string bindPath, void (*callback)(int, uint8_t*, size_t)) : ServerSockEP(callback), slen_{sizeof(saddr_)}
 UnixStreamServerSockEP::UnixStreamServerSockEP(std::string bindPath, std::function<void(int, const char*, size_t)> callback) : ServerSockEP(callback), slen_{sizeof(saddr_)}
 {
-    std::cout << "Constructing Unix Stream Server Socket..." << std::endl;
+    // std::cout << "Constructing Unix Stream Server Socket..." << std::endl;
 
     memset(&saddr_, 0, sizeof(struct sockaddr_un));
     strncpy(saddr_.sun_path, bindPath.c_str(), sizeof(saddr_.sun_path) - 1);
@@ -42,7 +42,7 @@ UnixStreamServerSockEP::UnixStreamServerSockEP(std::string bindPath, std::functi
 
 UnixStreamServerSockEP::~UnixStreamServerSockEP()
 {
-    std::cout << "Destructor" << std::endl;
+    // std::cout << "Destructor" << std::endl;
     // close the socket
     closeSocket();
 }
@@ -57,7 +57,7 @@ void UnixStreamServerSockEP::runServer()
         return;
     }
 
-    std::cout << "Successfully started server thread" << std::endl;
+    // std::cout << "Successfully started server thread" << std::endl;
     fd_set rfds;
 
     // create the pollfds
@@ -80,7 +80,7 @@ void UnixStreamServerSockEP::runServer()
     
     while (serverRunning_)
     {
-        std::cout << "server tick" << std::endl;
+        // std::cout << "server tick" << std::endl;
 
         // -1 == no timeout
         int pollStatus = poll(pfds.data(), pfds.size(), -1);
@@ -93,7 +93,7 @@ void UnixStreamServerSockEP::runServer()
 
         for (auto pfd : pfds)
         {
-            std::cout << "Fd: " << pfd.fd << " | events: " << pfd.events << " | revents : " << pfd.revents << "\n";
+            // std::cout << "Fd: " << pfd.fd << " | events: " << pfd.events << " | revents : " << pfd.revents << "\n";
             // handle receive socket
             if (pfd.fd == sock_ && pfd.revents & POLLIN)
             { // new client connection
@@ -117,7 +117,7 @@ void UnixStreamServerSockEP::runServer()
             else if (pfd.fd == pipeFd_[0] && pfd.revents & POLLHUP)
             { // need to terminate
                 serverRunning_ = false;
-                std::cout << "stopping server" << std::endl;
+                // std::cout << "stopping server" << std::endl;
                 break;
             }
             else if (pfd.fd != sock_ && pfd.fd != pipeFd_[0])
@@ -126,7 +126,7 @@ void UnixStreamServerSockEP::runServer()
 
                 if (pfd.revents & POLLIN)
                 { // data to read
-                    std::cout << "Got message from socket " << pfd.fd << "\n";
+                    // std::cout << "Got message from socket " << pfd.fd << "\n";
 
                     clientsMutex_.lock();
                     int bytesReceived = clients_[pfd.fd]->getMessage(msg_, sizeof(msg_));
@@ -167,7 +167,7 @@ void UnixStreamServerSockEP::runServer()
                 auto pfdToRemoveLoc = find_if(pfds.begin(), pfds.end(), matchPfd);
                 if (pfdToRemoveLoc != pfds.end())
                 { // found something to delete
-                    std::cout << "Deleting " << pfdToRemoveLoc->fd << "\n";
+                    // std::cout << "Deleting " << pfdToRemoveLoc->fd << "\n";
                     pfds.erase(pfdToRemoveLoc);
                 }
             };
@@ -199,7 +199,7 @@ void UnixStreamServerSockEP::sendMessageToClient(int clientId, const char* msg, 
 {
     if (!isValid())
     {
-        std::cout << "Server is not valid" << std::endl;
+        std::cerr << "Server is not valid" << std::endl;
         return;
     }
     // maybe if clientId == -1 then send message to all clients?
@@ -209,11 +209,10 @@ void UnixStreamServerSockEP::sendMessageToClient(int clientId, const char* msg, 
 
     if (clientIt == clients_.end())
     {
-        std::cout << "Could not find client with id " << clientId << std::endl;
-        // not found
+        std::cerr << "Could not find client with id " << clientId << std::endl;
         return;
     }
-    std::cout << "sending to " << clientIt->second->to_str() << std::endl;
+    // std::cout << "sending to " << clientIt->second->to_str() << std::endl;
     sendto(sock_, msg, msgLen, 0, clientIt->second->getSaddr(), clientIt->second->getSaddrLen());
     
 }

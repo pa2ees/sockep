@@ -26,7 +26,7 @@ int main()
 
     std::cout << "Server valid: " << (srvr->isValid() ? "true" : "false") << std::endl;
     srvr->startServer();
-    std::cout << "Server started";
+    std::cout << "Server started\n";
     
     while (running)
     {

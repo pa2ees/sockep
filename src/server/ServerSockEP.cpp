@@ -12,14 +12,12 @@ ServerSockEP::ServerSockEP(std::function<void(int, const char*, size_t)> callbac
 
 ServerSockEP::~ServerSockEP()
 {
-    std::cout << "ServerSockEP Destructor" << std::endl;
-    // close the socket
     closeSocket();
 }
 
 void ServerSockEP::closeSocket()
 {
-    std::cout << "Closing socket" << std::endl;
+    // std::cout << "Closing socket" << std::endl;
     if (serverRunning())
     {
         stopServer();
@@ -31,12 +29,12 @@ void ServerSockEP::closeSocket()
 int ServerSockEP::addClient(std::unique_ptr<ISSClientSockEP> newClient)
 {
     // find if client already exists
-    std::cout << "Looking for client " << newClient->to_str() << "\n";
+    // std::cout << "Looking for client " << newClient->to_str() << "\n";
     std::lock_guard<std::mutex> lock(clientsMutex_);
         
     for (auto &client : clients_)
     {
-        std::cout << "Found client " << client.second->to_str() << "\n";
+        // std::cout << "Found client " << client.second->to_str() << "\n";
         if (client.second != nullptr && *client.second == *newClient) //strcmp(client.second.sun_path, clientSaddr.sun_path) == 0)
         {
             // client already in list, return id.
@@ -50,7 +48,7 @@ int ServerSockEP::addClient(std::unique_ptr<ISSClientSockEP> newClient)
         // get the id of the last client and add 1
         clientId = std::prev(clients_.end())->first + 1;
     }
-    std::cout << "Inserting client with ID " << clientId << " and address " << newClient->to_str() << std::endl; 
+    // std::cout << "Inserting client with ID " << clientId << " and address " << newClient->to_str() << std::endl; 
     clients_.emplace(clientId, std::move(newClient));
     return clientId;
 }
@@ -64,7 +62,7 @@ void ServerSockEP::startServer()
         serverRunning_ = false;
         return;
     }
-    std::cout << "Starting thread..." << std::endl;
+    // std::cout << "Starting thread..." << std::endl;
     serverThread_ = std::thread([=]() { this->runServer(); });
 }
 
@@ -72,15 +70,15 @@ void ServerSockEP::stopServer()
 {
     if (!serverRunning_)
     {
-        std::cout << "Must first start the thread before stopping it" << std::endl;
+        // std::cout << "Must first start the thread before stopping it" << std::endl;
         return;
     }
     close(pipeFd_[1]);
     if (serverThread_.joinable())
     {
-        std::cout << "Server thread is joinable, joining..." << std::endl;
+        // std::cout << "Server thread is joinable, joining..." << std::endl;
         serverThread_.join();
-        std::cout << "Successfully joined thread." << std::endl;
+        // std::cout << "Successfully joined thread." << std::endl;
     }
 }
 

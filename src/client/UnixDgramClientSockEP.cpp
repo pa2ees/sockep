@@ -6,7 +6,7 @@ using namespace sockep;
 
 UnixDgramClientSockEP::UnixDgramClientSockEP(std::string bindPath, std::string serverPath)
 {
-    std::cout << "Constructing Unix Datagram Client Socket..." << std::endl;
+    // std::cout << "Constructing Unix Datagram Client Socket..." << std::endl;
 
     memset(&saddr_, 0, sizeof(struct sockaddr_un));
     strncpy(saddr_.sun_path, bindPath.c_str(), sizeof(saddr_.sun_path) - 1);
@@ -73,7 +73,7 @@ int UnixDgramClientSockEP::getMessage(char* msg, const int msgMaxLen)
 
 bool UnixDgramClientSockEP::operator== (ISSClientSockEP const *other)
 {
-    std::cout << "Comparing " << to_str() << " and " << other->to_str() << " with length " << other->getSaddrLen() << "\n";
+    // std::cout << "Comparing " << to_str() << " and " << other->to_str() << " with length " << other->getSaddrLen() << "\n";
     if (memcmp(&saddr_, other->getSaddr(), other->getSaddrLen()) == 0)
     {
         return true;
