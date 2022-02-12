@@ -122,15 +122,22 @@ void UnixStreamServerSockEP::runServer()
             }
             else if (pfd.fd != sock_ && pfd.fd != pipeFd_[0])
             {
-                //auto client = clients_[pfd.fd];
+                if (pfd.revents & POLLHUP)
+                { // must be before POLLIN because a hup sets POLLIN bit also
+                    clientsMutex_.lock();
+                    removePfds.push_back(pfd);
+                    clients_.erase(pfd.fd);
 
-                if (pfd.revents & POLLIN)
+                    clientsMutex_.unlock();
+
+                }
+                else if (pfd.revents & POLLIN)
                 { // data to read
                     // std::cout << "Got message from socket " << pfd.fd << "\n";
 
                     clientsMutex_.lock();
                     int bytesReceived = clients_[pfd.fd]->getMessage(msg_, sizeof(msg_));
-                    // int bytesReceived = recv(pfd.fd, msg_, sizeof(msg_), 0);
+
                     clientsMutex_.unlock();
                     
                     if (callback_)
@@ -138,15 +145,6 @@ void UnixStreamServerSockEP::runServer()
                         callback_(pfd.fd, msg_, bytesReceived);
                         
                     }
-                }
-                if (pfd.revents & POLLHUP)
-                {
-                    clientsMutex_.lock();
-                    removePfds.push_back(pfd);
-                    clients_.erase(pfd.fd);
-
-                    clientsMutex_.unlock();
-
                 }
             }
         }
@@ -212,9 +210,7 @@ void UnixStreamServerSockEP::sendMessageToClient(int clientId, const char* msg, 
         std::cerr << "Could not find client with id " << clientId << std::endl;
         return;
     }
-    // std::cout << "sending to " << clientIt->second->to_str() << std::endl;
-    sendto(sock_, msg, msgLen, 0, clientIt->second->getSaddr(), clientIt->second->getSaddrLen());
-    
+    send(clientIt->second->getSock(), msg, msgLen, 0);//, clientIt->second->getSaddr(), clientIt->second->getSaddrLen());
 }
 
 void UnixStreamServerSockEP::sendMessageToClient(int clientId, const std::string &msg)

@@ -12,12 +12,14 @@ void messageHandler(int clientId, const char* msg, size_t msgLen)
 {
     std::string message(msg, msgLen);
     std::cout << "Got message from client " << clientId << ": " << message << std::endl;
-    srvr->sendMessageToClient(clientId, "Got your message, Hello!!");
     if (message == "quit")
     {
         running = false;
     }
-    
+    else
+    {
+        srvr->sendMessageToClient(clientId, "Got your message, Hello!!");
+    }
 }
 
 int main()
@@ -36,6 +38,7 @@ int main()
 
     }
     
+    usleep(1000 * 100); // 10 ms
     srvr->stopServer();
     //srvr->closeSocket();
     
