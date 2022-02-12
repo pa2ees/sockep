@@ -5,31 +5,32 @@
 // #include "SockEP.h"
 
 #include "server/UnixDgramServerSockEP.h"
+#include "server/UnixStreamServerSockEP.h"
 #include "client/UnixDgramClientSockEP.h"
+#include "client/UnixStreamClientSockEP.h"
 
-#include <functional>
 
 using namespace sockep;
 
-IServerSockEP *SockEPFactory::createUnixDgramServerSockEP(std::string bindPath, std::function<void(int, const char*, size_t)> callback)
+std::unique_ptr<IServerSockEP> SockEPFactory::createUnixDgramServerSockEP(std::string bindPath, std::function<void(int, const char*, size_t)> callback)
 {
-    return new UnixDgramServerSockEP(bindPath, callback);
+    return std::unique_ptr<UnixDgramServerSockEP> (new UnixDgramServerSockEP(bindPath, callback));
 }
 
-IClientSockEP *SockEPFactory::createUnixDgramClientSockEP(std::string bindPath, std::string serverPath)
+std::unique_ptr<IClientSockEP> SockEPFactory::createUnixDgramClientSockEP(std::string bindPath, std::string serverPath)
 {
-    return new UnixDgramClientSockEP(bindPath, serverPath);
+    return std::unique_ptr<UnixDgramClientSockEP> (new UnixDgramClientSockEP(bindPath, serverPath));
 }
 
-// IServerSockEP *SockEPFactory::createUnixStreamServerSockEP(std::string bindPath)
-// {
-//     return new UnixStreamServerSockEP(bindPath);
-// }
+std::unique_ptr<IServerSockEP> SockEPFactory::createUnixStreamServerSockEP(std::string bindPath, std::function<void(int, const char*, size_t)> callback)
+{
+    return std::unique_ptr<UnixStreamServerSockEP> (new UnixStreamServerSockEP(bindPath, callback));
+}
 
-// IClientSockEP *SockEPFactory::createUnixStreamClientSockEP(std::string serverPath)
-// {
-//     return new UnixStreamClientSockEP(serverPath);
-// }
+std::unique_ptr<IClientSockEP> SockEPFactory::createUnixStreamClientSockEP(std::string bindPath, std::string serverPath)
+{
+    return std::unique_ptr<UnixStreamClientSockEP> (new UnixStreamClientSockEP(bindPath, serverPath));
+}
 
 // ISockEP *SockEPFactory::createUnixStreamSockEP()
 // {

@@ -8,11 +8,11 @@
 namespace sockep
 {
     
-class UnixDgramServerSockEP : public ServerSockEP
+class UnixStreamServerSockEP : public ServerSockEP
 {
 public:
-    UnixDgramServerSockEP(std::string bindPath, std::function<void(int, const char*, size_t)> callback = nullptr);
-    ~UnixDgramServerSockEP();
+    UnixStreamServerSockEP(std::string bindPath, std::function<void(int, const char*, size_t)> callback = nullptr);
+    ~UnixStreamServerSockEP();
 
     void sendMessageToClient(int clientId, const char* msg, size_t msgLen) override;
     void sendMessageToClient(int clientId, const std::string &msg) override;
