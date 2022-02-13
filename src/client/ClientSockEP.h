@@ -1,7 +1,7 @@
 #pragma once
 
-#ifndef DGRAM_MAX_LEN
-#define DGRAM_MAX_LEN 5000
+#ifndef MESSAGE_MAX_LEN
+#define MESSAGE_MAX_LEN 5000
 #endif
 
 #include "client/IClientSockEP.h"
@@ -36,7 +36,7 @@ protected:
     ClientSockEPType sockType_;
     bool isValid_ {false};
     int sock_ = -1;
-    char msg_[DGRAM_MAX_LEN];
+    char msg_[MESSAGE_MAX_LEN];
 };
 
 }

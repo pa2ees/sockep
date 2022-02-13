@@ -46,9 +46,9 @@ UnixDgramClientSockEP::~UnixDgramClientSockEP()
 /******* BOTH INTERFACES **********/
 int UnixDgramClientSockEP::sendMessage(const char* msg, size_t msgLen)
 {
-    if (msgLen > DGRAM_MAX_LEN)
+    if (msgLen > MESSAGE_MAX_LEN)
     {
-        std::cerr << "Datagram message too long! Max Datagram length: " << DGRAM_MAX_LEN << "\n";
+        std::cerr << "Datagram message too long! Max Datagram length: " << MESSAGE_MAX_LEN << "\n";
         return -1;
     }
     return sendto(sock_, msg, msgLen, 0, (struct sockaddr *) &serverSaddr_, sizeof(serverSaddr_));

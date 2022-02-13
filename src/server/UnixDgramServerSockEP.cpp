@@ -127,9 +127,9 @@ std::unique_ptr<ISSClientSockEP> UnixDgramServerSockEP::createNewClient()
 
 int UnixDgramServerSockEP::sendMessageToClient(int clientId, const char* msg, size_t msgLen)
 {
-    if (msgLen > DGRAM_MAX_LEN)
+    if (msgLen > MESSAGE_MAX_LEN)
     {
-        std::cerr << "Datagram message too long! Max Datagram length: " << DGRAM_MAX_LEN << "\n";
+        std::cerr << "Datagram message too long! Max Datagram length: " << MESSAGE_MAX_LEN << "\n";
         return -1;
     }
     

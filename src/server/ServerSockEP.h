@@ -1,7 +1,7 @@
 #pragma once
 
-#ifndef DGRAM_MAX_LEN
-#define DGRAM_MAX_LEN 5000
+#ifndef MESSAGE_MAX_LEN
+#define MESSAGE_MAX_LEN 5000
 #endif
 
 #include "server/IServerSockEP.h"
@@ -55,7 +55,7 @@ protected:
     std::atomic<bool> serverRunning_ {false};
     int sock_ = -1;
     bool isValid_ = false;
-    char msg_[DGRAM_MAX_LEN];
+    char msg_[MESSAGE_MAX_LEN];
 
     // this should probably hold a unique pointer
     std::map<int, std::unique_ptr<ISSClientSockEP>> clients_;
