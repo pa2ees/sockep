@@ -1,6 +1,7 @@
 #include "UnixDgramClientSockEP.h"
 
 #include <iostream>
+#include <sys/poll.h>
 
 using namespace sockep;
 
@@ -37,15 +38,25 @@ UnixDgramClientSockEP::UnixDgramClientSockEP(std::string bindPath, std::string s
 // for server side client creation
 UnixDgramClientSockEP::UnixDgramClientSockEP() {}
 
-/******* BOTH INTERFACES **********/
-void UnixDgramClientSockEP::sendMessage(const char* msg, size_t msgLen)
-{    
-    sendto(sock_, msg, msgLen, 0, (struct sockaddr *) &serverSaddr_, sizeof(serverSaddr_));
+UnixDgramClientSockEP::~UnixDgramClientSockEP()
+{
+    unlink(saddr_.sun_path);
 }
 
-void UnixDgramClientSockEP::sendMessage(const std::string &msg)
+/******* BOTH INTERFACES **********/
+int UnixDgramClientSockEP::sendMessage(const char* msg, size_t msgLen)
 {
-    sendMessage(msg.c_str(), msg.size());
+    if (msgLen > DGRAM_MAX_LEN)
+    {
+        std::cerr << "Datagram message too long! Max Datagram length: " << DGRAM_MAX_LEN << "\n";
+        return -1;
+    }
+    return sendto(sock_, msg, msgLen, 0, (struct sockaddr *) &serverSaddr_, sizeof(serverSaddr_));
+}
+
+int UnixDgramClientSockEP::sendMessage(const std::string &msg)
+{
+    return sendMessage(msg.c_str(), msg.size());
 }
 
 std::string UnixDgramClientSockEP::to_str() const

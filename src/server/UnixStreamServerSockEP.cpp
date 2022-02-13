@@ -45,6 +45,7 @@ UnixStreamServerSockEP::~UnixStreamServerSockEP()
     // std::cout << "Destructor" << std::endl;
     // close the socket
     closeSocket();
+    unlink(saddr_.sun_path);
 }
 
 // run as a thread when IServerSockEP::startServer() is called
@@ -193,12 +194,12 @@ std::unique_ptr<ISSClientSockEP> UnixStreamServerSockEP::createNewClient()
     return newClient;
 }
 
-void UnixStreamServerSockEP::sendMessageToClient(int clientId, const char* msg, size_t msgLen)
+int UnixStreamServerSockEP::sendMessageToClient(int clientId, const char* msg, size_t msgLen)
 {
     if (!isValid())
     {
         std::cerr << "Server is not valid" << std::endl;
-        return;
+        return -1;
     }
     // maybe if clientId == -1 then send message to all clients?
     clientsMutex_.lock();
@@ -208,12 +209,12 @@ void UnixStreamServerSockEP::sendMessageToClient(int clientId, const char* msg, 
     if (clientIt == clients_.end())
     {
         std::cerr << "Could not find client with id " << clientId << std::endl;
-        return;
+        return -1;
     }
-    send(clientIt->second->getSock(), msg, msgLen, 0);//, clientIt->second->getSaddr(), clientIt->second->getSaddrLen());
+    return send(clientIt->second->getSock(), msg, msgLen, 0);//, clientIt->second->getSaddr(), clientIt->second->getSaddrLen());
 }
 
-void UnixStreamServerSockEP::sendMessageToClient(int clientId, const std::string &msg)
+int UnixStreamServerSockEP::sendMessageToClient(int clientId, const std::string &msg)
 {
-    sendMessageToClient(clientId, msg.c_str(), msg.size());
+    return sendMessageToClient(clientId, msg.c_str(), msg.size());
 }

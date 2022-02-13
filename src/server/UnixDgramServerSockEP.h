@@ -14,8 +14,8 @@ public:
     UnixDgramServerSockEP(std::string bindPath, std::function<void(int, const char*, size_t)> callback = nullptr);
     ~UnixDgramServerSockEP();
 
-    void sendMessageToClient(int clientId, const char* msg, size_t msgLen) override;
-    void sendMessageToClient(int clientId, const std::string &msg) override;
+    int sendMessageToClient(int clientId, const char* msg, size_t msgLen) override;
+    int sendMessageToClient(int clientId, const std::string &msg) override;
 
 private:
 

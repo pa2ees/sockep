@@ -45,15 +45,21 @@ UnixStreamClientSockEP::UnixStreamClientSockEP(std::string bindPath, std::string
 // for server side client creation
 UnixStreamClientSockEP::UnixStreamClientSockEP() {}
 
-/******* BOTH INTERFACES **********/
-void UnixStreamClientSockEP::sendMessage(const char* msg, size_t msgLen)
-{    
-    send(sock_, msg, msgLen, 0);
+UnixStreamClientSockEP::~UnixStreamClientSockEP()
+{
+    unlink(saddr_.sun_path);
 }
 
-void UnixStreamClientSockEP::sendMessage(const std::string &msg)
+
+/******* BOTH INTERFACES **********/
+int UnixStreamClientSockEP::sendMessage(const char* msg, size_t msgLen)
 {
-    sendMessage(msg.c_str(), msg.size());
+    return send(sock_, msg, msgLen, 0);
+}
+
+int UnixStreamClientSockEP::sendMessage(const std::string &msg)
+{
+    return sendMessage(msg.c_str(), msg.size());
 }
 
 std::string UnixStreamClientSockEP::to_str() const

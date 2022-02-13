@@ -14,9 +14,11 @@ public:
     UnixDgramClientSockEP(std::string bindPath, std::string serverPath);
     UnixDgramClientSockEP(); // for server side client creation
 
+    ~UnixDgramClientSockEP();
+
     // for both interfaces (Client and Server Side Client)
-    void sendMessage(const char* msg, size_t msgLen) override;
-    void sendMessage(const std::string &msg) override;
+    int sendMessage(const char* msg, size_t msgLen) override;
+    int sendMessage(const std::string &msg) override;
     std::string to_str() const override;
 
     // for Client interface

@@ -1,5 +1,9 @@
 #pragma once
 
+#ifndef DGRAM_MAX_LEN
+#define DGRAM_MAX_LEN 5000
+#endif
+
 #include "server/IServerSockEP.h"
 #include "client/ISSClientSockEP.h"
 
@@ -34,8 +38,8 @@ public:
     virtual void stopServer() override;
     bool serverRunning() override;
 
-    virtual void sendMessageToClient(int clientId, const char* msg, size_t msgLen) override = 0;
-    virtual void sendMessageToClient(int clientId, const std::string &msg) override = 0;
+    virtual int sendMessageToClient(int clientId, const char* msg, size_t msgLen) override = 0;
+    virtual int sendMessageToClient(int clientId, const std::string &msg) override = 0;
     virtual std::vector<int> getClientIds() override;
     virtual std::string to_str() override {std::string s = "howdy"; return s;};
 
@@ -51,7 +55,7 @@ protected:
     std::atomic<bool> serverRunning_ {false};
     int sock_ = -1;
     bool isValid_ = false;
-    char msg_[1000];
+    char msg_[DGRAM_MAX_LEN];
 
     // this should probably hold a unique pointer
     std::map<int, std::unique_ptr<ISSClientSockEP>> clients_;

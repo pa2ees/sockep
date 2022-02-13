@@ -37,6 +37,7 @@ UnixDgramServerSockEP::~UnixDgramServerSockEP()
     // std::cout << "Destructor" << std::endl;
     // close the socket
     closeSocket();
+    unlink(saddr_.sun_path);
 }
 
 
@@ -124,12 +125,18 @@ std::unique_ptr<ISSClientSockEP> UnixDgramServerSockEP::createNewClient()
     return std::unique_ptr<UnixDgramClientSockEP> (new UnixDgramClientSockEP());
 }
 
-void UnixDgramServerSockEP::sendMessageToClient(int clientId, const char* msg, size_t msgLen)
+int UnixDgramServerSockEP::sendMessageToClient(int clientId, const char* msg, size_t msgLen)
 {
+    if (msgLen > DGRAM_MAX_LEN)
+    {
+        std::cerr << "Datagram message too long! Max Datagram length: " << DGRAM_MAX_LEN << "\n";
+        return -1;
+    }
+    
     if (!isValid())
     {
         std::cerr << "Server is not valid" << std::endl;
-        return;
+        return -1;
     }
     // maybe if clientId == -1 then send message to all clients?
     clientsMutex_.lock();
@@ -140,14 +147,14 @@ void UnixDgramServerSockEP::sendMessageToClient(int clientId, const char* msg, s
     {
         std::cerr << "Could not find client with id " << clientId << std::endl;
         // not found
-        return;
+        return -1;
     }
     // std::cout << "sending to " << clientIt->second->to_str() << std::endl;
-    sendto(sock_, msg, msgLen, 0, clientIt->second->getSaddr(), clientIt->second->getSaddrLen());
+    return sendto(sock_, msg, msgLen, 0, clientIt->second->getSaddr(), clientIt->second->getSaddrLen());
     
 }
 
-void UnixDgramServerSockEP::sendMessageToClient(int clientId, const std::string &msg)
+int UnixDgramServerSockEP::sendMessageToClient(int clientId, const std::string &msg)
 {
-    sendMessageToClient(clientId, msg.c_str(), msg.size());
+    return sendMessageToClient(clientId, msg.c_str(), msg.size());
 }
