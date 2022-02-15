@@ -98,7 +98,7 @@ void UnixDgramServerSockEP::runServer()
 
                 // this will always return the client id, whether it's already exists or not
                 int clientId = addClient(std::move(newClient));
-                
+
                 if (callback_)
                 {
                     callback_(clientId, msg_, bytesReceived);
@@ -149,9 +149,13 @@ int UnixDgramServerSockEP::sendMessageToClient(int clientId, const char* msg, si
         // not found
         return -1;
     }
-    // std::cout << "sending to " << clientIt->second->to_str() << std::endl;
-    return sendto(sock_, msg, msgLen, 0, clientIt->second->getSaddr(), clientIt->second->getSaddrLen());
-    
+    // std::cout << "sending " << msgLen << " bytes to " << clientIt->second->to_str() << " with sock " << sock_ << "\nAnd saddr len: " << clientIt->second->getSaddrLen() << "\n";
+    int retval = sendto(sock_, msg, msgLen, 0, clientIt->second->getSaddr(), clientIt->second->getSaddrLen());
+    if (retval == -1)
+    {
+        std::cout << "Errno: " << errno << "\n";
+    }
+    return retval;
 }
 
 int UnixDgramServerSockEP::sendMessageToClient(int clientId, const std::string &msg)

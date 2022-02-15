@@ -38,6 +38,11 @@ int ServerSockEP::addClient(std::unique_ptr<ISSClientSockEP> newClient)
         if (client.second != nullptr && *client.second == *newClient) //strcmp(client.second.sun_path, clientSaddr.sun_path) == 0)
         {
             // client already in list, return id.
+
+            // need to clear Saddr or the destructor of newClient will
+            // unlink the socket when it goes out of scope
+            newClient->clearSaddr();
+
             return client.first;
         }
     }

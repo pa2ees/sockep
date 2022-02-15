@@ -36,10 +36,14 @@ UnixDgramClientSockEP::UnixDgramClientSockEP(std::string bindPath, std::string s
 }
 
 // for server side client creation
-UnixDgramClientSockEP::UnixDgramClientSockEP() {}
+UnixDgramClientSockEP::UnixDgramClientSockEP()
+{
+    // std::cout << "Constructing Unix Dgram Client\n";
+}
 
 UnixDgramClientSockEP::~UnixDgramClientSockEP()
 {
+    // std::cout << "Destructing Unix Dgram Client\n";
     unlink(saddr_.sun_path);
 }
 
