@@ -3,7 +3,7 @@
 #include <iostream>
 #include <sys/socket.h>
 #include <sys/poll.h>
-#include <algorithm>
+// #include <algorithm>
 
 using namespace sockep;
 
@@ -49,50 +49,78 @@ UnixStreamServerSockEP::~UnixStreamServerSockEP()
 }
 
 // run as a thread when IServerSockEP::startServer() is called
-void UnixStreamServerSockEP::runServer()
-{
-    if (!isValid())
-    {
-        std::cerr << "Socket is not valid, cannot run a server" << std::endl;
-        serverRunning_ = false;
-        return;
-    }
+// void UnixStreamServerSockEP::runServer()
+// {
+    // if (!isValid())
+    // {
+    //     std::cerr << "Socket is not valid, cannot run a server" << std::endl;
+    //     serverRunning_ = false;
+    //     return;
+    // }
 
-    // std::cout << "Successfully started server thread" << std::endl;
-    fd_set rfds;
+    // // std::cout << "Successfully started server thread" << std::endl;
+    // fd_set rfds;
 
-    // create the pollfds
-    std::vector<struct pollfd> pfds;
-    std::vector<struct pollfd> newPfds;
-    std::vector<struct pollfd> removePfds;
+    // // create the pollfds
+    // std::vector<struct pollfd> pfds;
+    // std::vector<struct pollfd> newPfds;
+    // std::vector<struct pollfd> removePfds;
 
-    // create temporary pfd to add to vector
-    struct pollfd pfd;
+    // // create temporary pfd to add to vector
+    // struct pollfd pfd;
 
-    // create listen socket
-    pfd.fd = sock_;
-    pfd.events = POLLIN;
-    pfds.push_back(pfd);
+    // // create listen socket
+    // pfd.fd = sock_;
+    // pfd.events = POLLIN;
+    // pfds.push_back(pfd);
 
-    // create pipe socket
-    pfd.fd = pipeFd_[0];
-    pfd.events = 0; // only listen for POLLHUP (other end of pipe closed)
-    pfds.push_back(pfd);
+    // // create pipe socket
+    // pfd.fd = pipeFd_[0];
+    // pfd.events = 0; // only listen for POLLHUP (other end of pipe closed)
+    // pfds.push_back(pfd);
     
-    while (serverRunning_)
-    {
-        // std::cout << "server tick" << std::endl;
+    // while (serverRunning_)
+    // {
+    //     // std::cout << "server tick" << std::endl;
 
-        // -1 == no timeout
-        int pollStatus = poll(pfds.data(), pfds.size(), -1);
-        if (pollStatus == -1)
-        {
-            perror("problem with poll");
-            serverRunning_ = false;
-            break;
-        }
+    //     // -1 == no timeout
+    //     int pollStatus = poll(pfds.data(), pfds.size(), -1);
+    //     if (pollStatus == -1)
+    //     {
+    //         perror("problem with poll");
+    //         serverRunning_ = false;
+    //         break;
+    //     }
 
-        for (auto pfd : pfds)
+    //     // add all of the new client pfds to our pfds list
+    //     pfds.insert(pfds.end(), newPfds.begin(), newPfds.end());
+    //     newPfds.clear();
+    //     // remove all of the clients that have hung up
+    //     auto removePfd = [&pfds](const struct pollfd &pfdToRemove)
+    //         {
+    //             auto matchPfd = [&pfdToRemove] (struct pollfd &pfd) -> bool
+    //                 {
+    //                     if (memcmp(&pfdToRemove, &pfd, sizeof(struct pollfd)) == 0)
+    //                     { // found a match
+    //                         return true;
+    //                     }
+    //                     return false;
+    //                 };
+    //             auto pfdToRemoveLoc = find_if(pfds.begin(), pfds.end(), matchPfd);
+    //             if (pfdToRemoveLoc != pfds.end())
+    //             { // found something to delete
+    //                 // std::cout << "Deleting " << pfdToRemoveLoc->fd << "\n";
+    //                 pfds.erase(pfdToRemoveLoc);
+    //             }
+    //         };
+    //     std::for_each(removePfds.begin(), removePfds.end(), removePfd);
+    //     removePfds.clear();
+    // }
+// }
+
+void UnixStreamServerSockEP::handlePfdUpdates(const std::vector<struct pollfd> &pfds, std::vector<struct pollfd> newPfds, std::vector<struct pollfd> &removePfds)
+{
+        for (auto &pfd : pfds)
         {
             // std::cout << "Fd: " << pfd.fd << " | events: " << pfd.events << " | revents : " << pfd.revents << "\n";
             // handle receive socket
@@ -149,32 +177,8 @@ void UnixStreamServerSockEP::runServer()
                 }
             }
         }
-        // add all of the new client pfds to our pfds list
-        pfds.insert(pfds.end(), newPfds.begin(), newPfds.end());
-        newPfds.clear();
-        // remove all of the clients that have hung up
-        auto removePfd = [&pfds](const struct pollfd &pfdToRemove)
-            {
-                auto matchPfd = [&pfdToRemove] (struct pollfd &pfd) -> bool
-                    {
-                        if (memcmp(&pfdToRemove, &pfd, sizeof(struct pollfd)) == 0)
-                        { // found a match
-                            return true;
-                        }
-                        return false;
-                    };
-                auto pfdToRemoveLoc = find_if(pfds.begin(), pfds.end(), matchPfd);
-                if (pfdToRemoveLoc != pfds.end())
-                { // found something to delete
-                    // std::cout << "Deleting " << pfdToRemoveLoc->fd << "\n";
-                    pfds.erase(pfdToRemoveLoc);
-                }
-            };
-        std::for_each(removePfds.begin(), removePfds.end(), removePfd);
-        removePfds.clear();
-    }
-}
 
+}
 std::unique_ptr<ISSClientSockEP> UnixStreamServerSockEP::createNewClient()
 {
     std::unique_ptr<UnixStreamClientSockEP> newClient = std::unique_ptr<UnixStreamClientSockEP> (new UnixStreamClientSockEP());
