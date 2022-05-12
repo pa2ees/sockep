@@ -9,6 +9,8 @@ SockEPFactory.cpp
 server/ServerSockEP.cpp
 server/UnixDgramServerSockEP.cpp
 server/UnixStreamServerSockEP.cpp
+server/TcpServerSockEP.cpp
 client/UnixDgramClientSockEP.cpp
 client/UnixStreamClientSockEP.cpp
+client/TcpClientSockEP.cpp
 )

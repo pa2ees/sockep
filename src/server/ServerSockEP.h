@@ -15,6 +15,8 @@
 #include <functional>
 #include <memory>
 
+#include <sys/poll.h>
+
 namespace sockep
 {
 
@@ -46,7 +48,7 @@ public:
 protected:
     virtual int addClient(std::unique_ptr<ISSClientSockEP> newClient);
     void runServer();
-    virtual void handlePfdUpdates(const std::vector<struct pollfd> &pfds, std::vector<struct pollfd> newPfds, std::vector<struct pollfd> &removePfds) = 0;
+    virtual void handlePfdUpdates(const std::vector<struct pollfd> &pfds, std::vector<struct pollfd> &newPfds, std::vector<struct pollfd> &removePfds) = 0;
     virtual void closeSocket();
 
     // allow concrete class to create the proper type of client

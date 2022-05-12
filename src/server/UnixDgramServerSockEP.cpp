@@ -121,66 +121,43 @@ UnixDgramServerSockEP::~UnixDgramServerSockEP()
   
 // }
 
-void UnixDgramServerSockEP::handlePfdUpdates(const std::vector<struct pollfd> &pfds, std::vector<struct pollfd> newPfds, std::vector<struct pollfd> &removePfds)
+void UnixDgramServerSockEP::handlePfdUpdates(const std::vector<struct pollfd> &pfds, std::vector<struct pollfd> &newPfds, std::vector<struct pollfd> &removePfds)
 {
-        for (const struct pollfd &pfd : pfds)
-        {
-            // std::cout << "Fd: " << pfd.fd << " | events: " << pfd.events << " | revents : " << pfd.revents << "\n";
-            // handle receive socket
-            if (pfd.fd == sock_ && pfd.revents & POLLIN)
-            { // new client connection
-                std::unique_ptr<ISSClientSockEP> newClient = createNewClient();
-                if (newClient == nullptr)
-                { // something went wrong with the creation of the client
-                    continue;
-                }
-
-                // add the new client to the list of new fds to add to the list
-                // of fds after the for loop is done, to not invalidate iterators
-                pfd.fd = newClient->getSock();
-                pfd.events = POLLIN;
-                newPfds.push_back(pfd);
-
-                clientsMutex_.lock();
-                clients_[pfd.fd] = std::move(newClient);
-                clientsMutex_.unlock();
-
-            }
-            else if (pfd.fd == pipeFd_[0] && pfd.revents & POLLHUP)
-            { // need to terminate
-                serverRunning_ = false;
-                // std::cout << "stopping server" << std::endl;
-                break;
-            }
-            else if (pfd.fd != sock_ && pfd.fd != pipeFd_[0])
+    for (const struct pollfd &pfd : pfds)
+    {
+        // std::cout << "Fd: " << pfd.fd << " | events: " << pfd.events << " | revents : " << pfd.revents << "\n";
+        // handle receive socket
+        if (pfd.fd == sock_ && pfd.revents & POLLIN)
+        { // new client connection
+            std::unique_ptr<ISSClientSockEP> newClient = createNewClient();
+            newClient->clearSaddr();
+            
+            auto len = newClient->getSaddrLen();
+            int bytesReceived = recvfrom(sock_, msg_, sizeof(msg_), 0, newClient->getSaddr(), &len);
+            msg_[bytesReceived] = '\0';
+            // std::cout << "Received " << bytesReceived << " bytes from " << newClient->to_str() << std::endl;
+            
+            // this will always return the client id, whether it's already exists or not
+            int clientId = addClient(std::move(newClient));
+            
+            if (callback_)
             {
-                if (pfd.revents & POLLHUP)
-                { // must be before POLLIN because a hup sets POLLIN bit also
-                    clientsMutex_.lock();
-                    removePfds.push_back(pfd);
-                    clients_.erase(pfd.fd);
-
-                    clientsMutex_.unlock();
-
-                }
-                else if (pfd.revents & POLLIN)
-                { // data to read
-                    // std::cout << "Got message from socket " << pfd.fd << "\n";
-
-                    clientsMutex_.lock();
-                    int bytesReceived = clients_[pfd.fd]->getMessage(msg_, sizeof(msg_));
-
-                    clientsMutex_.unlock();
-                    
-                    if (callback_)
-                    {
-                        callback_(pfd.fd, msg_, bytesReceived);
-                        
-                    }
-                }
+                callback_(clientId, msg_, bytesReceived);
             }
         }
-    
+        else if (pfd.fd == pipeFd_[0] && pfd.revents & POLLHUP)
+        { // need to terminate
+            serverRunning_ = false;
+            // std::cout << "stopping server" << std::endl;
+            break;
+        }
+        else if (pfd.fd != sock_ && pfd.fd != pipeFd_[0])
+        {
+            std::cerr << "No idea what happened here" << std::endl;
+            serverRunning_ = false;
+            break;
+        }
+    }
 }
 
 std::unique_ptr<ISSClientSockEP> UnixDgramServerSockEP::createNewClient()

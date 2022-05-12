@@ -1,32 +1,43 @@
-#include "UnixStreamServerSockEP.h"
-#include "client/UnixStreamClientSockEP.h" // so server can create new server side clients
+#include "TcpServerSockEP.h"
+#include "client/TcpClientSockEP.h" // so server can create new server side clients
 #include <iostream>
 #include <sys/socket.h>
 #include <sys/poll.h>
-// #include <algorithm>
 
 using namespace sockep;
 
-// UnixStreamServerSockEP::UnixStreamServerSockEP(std::string bindPath, void (*callback)(int, uint8_t*, size_t)) : ServerSockEP(callback), slen_{sizeof(saddr_)}
-UnixStreamServerSockEP::UnixStreamServerSockEP(std::string bindPath, std::function<void(int, const char*, size_t)> callback) : ServerSockEP(callback), slen_{sizeof(saddr_)}
+TcpServerSockEP::TcpServerSockEP(std::string ipaddr, int port, std::function<void(int, const char*, size_t)> callback) : ServerSockEP(callback), slen_{sizeof(saddr_)}
 {
-    // std::cout << "Constructing Unix Stream Server Socket..." << std::endl;
+    // std::cout << "Constructing TCP Server Socket..." << std::endl;
 
-    memset(&saddr_, 0, sizeof(struct sockaddr_un));
-    strncpy(saddr_.sun_path, bindPath.c_str(), sizeof(saddr_.sun_path) - 1);
-    saddr_.sun_family = AF_UNIX;
+    memset(&saddr_, 0, sizeof(struct sockaddr_in));
+    // strncpy(saddr_.sin_addr, bindPath.c_str(), sizeof(saddr_.sun_path) - 1);
+    saddr_.sin_family = AF_INET;
+    saddr_.sin_addr.s_addr = INADDR_ANY;
+    saddr_.sin_port = htons(port);
+    memset(&(saddr_.sin_zero), '\0', 8);
     
-    sock_ = socket(AF_UNIX, SOCK_STREAM, 0);
+    sock_ = socket(AF_INET, SOCK_STREAM, 0);
     if (sock_ == -1)
     {
         std::cerr << "Failed to create socket!" << std::endl;
         return;
     }
-    unlink(saddr_.sun_path);
+
+    int sockOptValue = 1;
+    int setsockopt_retval = setsockopt(sock_, SOL_SOCKET, SO_REUSEADDR, &sockOptValue, sizeof(sockOptValue));
+    if (setsockopt_retval == -1)
+    {
+        std::cerr << "Failed to set sock options!\n";
+        return;
+    }
+    
+    // unlink(saddr_.sun_path);
     int bind_retval = bind(sock_, (struct sockaddr*)&saddr_, sizeof(saddr_));
     if (bind_retval == -1)
     {
-        std::cerr << "Failed to bind socket to: " << saddr_.sun_path << std::endl;
+        std::cerr << "Failed to bind socket to: " << saddr_.sin_addr.s_addr << " on port " << saddr_.sin_port << "\n";
+        close(sock_);
         return;
     }
 
@@ -34,25 +45,26 @@ UnixStreamServerSockEP::UnixStreamServerSockEP(std::string bindPath, std::functi
     int listen_retval = listen(sock_, backlog);
     if (listen_retval == -1)
     {
-        std::cerr << "Failed to listen on socket at: " << saddr_.sun_path << "\n";
+        std::cerr << "Failed to listen on socket at: " << saddr_.sin_addr.s_addr << " on port " << saddr_.sin_port << "\n";
+        close(sock_);
         return;
     }
     isValid_ = true;
 }
 
-UnixStreamServerSockEP::~UnixStreamServerSockEP()
+TcpServerSockEP::~TcpServerSockEP()
 {
     // std::cout << "Destructor" << std::endl;
     // close the socket
     closeSocket();
-    unlink(saddr_.sun_path);
+    // unlink(saddr_.sun_path);
 }
 
-void UnixStreamServerSockEP::handlePfdUpdates(const std::vector<struct pollfd> &pfds, std::vector<struct pollfd> &newPfds, std::vector<struct pollfd> &removePfds)
+void TcpServerSockEP::handlePfdUpdates(const std::vector<struct pollfd> &pfds, std::vector<struct pollfd> &newPfds, std::vector<struct pollfd> &removePfds)
 {
     for (auto &pfd : pfds)
     {
-        // std::cout << "Fd: " << pfd.fd << " | events: " << pfd.events << " | revents : " << pfd.revents << "\n";
+        std::cout << "Fd: " << pfd.fd << " | events: " << pfd.events << " | revents : " << pfd.revents << "\n";
         // handle receive socket
         if (pfd.fd == sock_ && pfd.revents & POLLIN)
         { // new client connection
@@ -110,9 +122,9 @@ void UnixStreamServerSockEP::handlePfdUpdates(const std::vector<struct pollfd> &
     }
 }
 
-std::unique_ptr<ISSClientSockEP> UnixStreamServerSockEP::createNewClient()
+std::unique_ptr<ISSClientSockEP> TcpServerSockEP::createNewClient()
 {
-    std::unique_ptr<UnixStreamClientSockEP> newClient = std::unique_ptr<UnixStreamClientSockEP> (new UnixStreamClientSockEP());
+    std::unique_ptr<TcpClientSockEP> newClient = std::unique_ptr<TcpClientSockEP> (new TcpClientSockEP());
     
     newClient->clearSaddr();
 
@@ -129,7 +141,7 @@ std::unique_ptr<ISSClientSockEP> UnixStreamServerSockEP::createNewClient()
     return newClient;
 }
 
-int UnixStreamServerSockEP::sendMessageToClient(int clientId, const char* msg, size_t msgLen)
+int TcpServerSockEP::sendMessageToClient(int clientId, const char* msg, size_t msgLen)
 {
     if (!isValid())
     {
@@ -149,7 +161,7 @@ int UnixStreamServerSockEP::sendMessageToClient(int clientId, const char* msg, s
     return send(clientIt->second->getSock(), msg, msgLen, 0);//, clientIt->second->getSaddr(), clientIt->second->getSaddrLen());
 }
 
-int UnixStreamServerSockEP::sendMessageToClient(int clientId, const std::string &msg)
+int TcpServerSockEP::sendMessageToClient(int clientId, const std::string &msg)
 {
     return sendMessageToClient(clientId, msg.c_str(), msg.size());
 }

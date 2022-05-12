@@ -8,7 +8,9 @@
 #include "server/UnixStreamServerSockEP.h"
 #include "client/UnixDgramClientSockEP.h"
 #include "client/UnixStreamClientSockEP.h"
+#include "server/TcpServerSockEP.h"
 
+#include "client/TcpClientSockEP.h"
 
 using namespace sockep;
 
@@ -32,6 +34,15 @@ std::unique_ptr<IClientSockEP> SockEPFactory::createUnixStreamClientSockEP(std::
     return std::unique_ptr<UnixStreamClientSockEP> (new UnixStreamClientSockEP(bindPath, serverPath));
 }
 
+std::unique_ptr<IServerSockEP> SockEPFactory::createTcpServerSockEP(std::string ipaddr, int port, std::function<void(int, const char*, size_t)> callback)
+{
+    return std::unique_ptr<TcpServerSockEP> (new TcpServerSockEP(ipaddr, port, callback));
+}
+
+std::unique_ptr<IClientSockEP> SockEPFactory::createTcpClientSockEP(std::string serverIpaddr, int port)
+{
+    return std::unique_ptr<TcpClientSockEP> (new TcpClientSockEP(serverIpaddr, port));
+}
 // ISockEP *SockEPFactory::createUnixStreamSockEP()
 // {
 //     return new UnixStreamSockEP();
