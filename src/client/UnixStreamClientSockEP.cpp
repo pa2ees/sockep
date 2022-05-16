@@ -54,7 +54,8 @@ UnixStreamClientSockEP::~UnixStreamClientSockEP()
 /******* BOTH INTERFACES **********/
 int UnixStreamClientSockEP::sendMessage(const char* msg, size_t msgLen)
 {
-    return send(sock_, msg, msgLen, 0);
+    // MSG_NOSIGNAL prevents SIGPIPE from killing the program if the server goes away
+    return send(sock_, msg, msgLen, MSG_NOSIGNAL); 
 }
 
 int UnixStreamClientSockEP::sendMessage(const std::string &msg)
@@ -77,7 +78,7 @@ std::string UnixStreamClientSockEP::getMessage()
 /******* CLIENT INTERFACE **********/
 int UnixStreamClientSockEP::getMessage(char* msg, const int msgMaxLen)
 {
-    return recv(sock_, msg, msgMaxLen, 0);
+    return recv(sock_, msg, msgMaxLen, MSG_NOSIGNAL);
 }
 
 /******* SERVER SIDE CLIENT INTERFACE *********/

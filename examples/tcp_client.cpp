@@ -24,10 +24,13 @@ int main(int argc, char *argv[])
         std::cout << "> ";
         std::getline(std::cin, inp);
 
-        client->sendMessage(inp);//inp.c_str(), inp.size());
+        int result = client->sendMessage(inp);//inp.c_str(), inp.size());
+
+        std::cout << "Result is: " << result << "\n";
 
         if (inp == "quit")
         {
+            std::cout << "Quitting...\n";
             break;
         }
         if (inp == "read")
@@ -35,6 +38,8 @@ int main(int argc, char *argv[])
             std::cout << client->getMessage() << "\n";
         }
     }
+
+    std::cout << "Stopping\n";
     // client->sendMessage("Hello Socket!");
 
     // std::string serverMsg = client->getMessage();

@@ -158,7 +158,8 @@ int TcpServerSockEP::sendMessageToClient(int clientId, const char* msg, size_t m
         std::cerr << "Could not find client with id " << clientId << std::endl;
         return -1;
     }
-    return send(clientIt->second->getSock(), msg, msgLen, 0);//, clientIt->second->getSaddr(), clientIt->second->getSaddrLen());
+    // MSG_NOSIGNAL prevents SIGPIPE from killing the program if the client goes away
+    return send(clientIt->second->getSock(), msg, msgLen, MSG_NOSIGNAL);//, clientIt->second->getSaddr(), clientIt->second->getSaddrLen());
 }
 
 int TcpServerSockEP::sendMessageToClient(int clientId, const std::string &msg)

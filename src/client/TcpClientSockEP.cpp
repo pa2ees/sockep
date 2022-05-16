@@ -59,14 +59,8 @@ TcpClientSockEP::~TcpClientSockEP()
 /******* BOTH INTERFACES **********/
 int TcpClientSockEP::sendMessage(const char* msg, size_t msgLen)
 {
-    try
-    {
-        return send(sock_, msg, msgLen, 0);
-    }
-    catch(...)
-    {
-        std::cout << "Caught an exception!\n";
-    }
+    // MSG_NOSIGNAL prevents SIGPIPE from killing the program if there server goes away
+    return send(sock_, msg, msgLen, MSG_NOSIGNAL);
 }
 
 int TcpClientSockEP::sendMessage(const std::string &msg)
@@ -82,6 +76,11 @@ std::string TcpClientSockEP::to_str() const
 std::string TcpClientSockEP::getMessage()
 {
     int bytesReceived = getMessage(msg_, sizeof(msg_));
+    if (bytesReceived == -1)
+    { // an error has occurred
+        isValid_ = false;
+        return "";
+    }
     std::string receiveStr(msg_, bytesReceived);
     return receiveStr;
 }
@@ -89,7 +88,7 @@ std::string TcpClientSockEP::getMessage()
 /******* CLIENT INTERFACE **********/
 int TcpClientSockEP::getMessage(char* msg, const int msgMaxLen)
 {
-    return recv(sock_, msg, msgMaxLen, 0);
+    return recv(sock_, msg, msgMaxLen, MSG_NOSIGNAL);
 }
 
 /******* SERVER SIDE CLIENT INTERFACE *********/
