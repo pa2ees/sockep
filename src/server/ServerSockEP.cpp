@@ -77,7 +77,7 @@ void ServerSockEP::runServer()
 {
     if (!isValid())
     {
-        std::cerr << "Socket is not valid, cannot run a server" << std::endl;
+        std::cerr << "Socket is not valid, cannot run a server\n";
         serverRunning_ = false;
         return;
     }

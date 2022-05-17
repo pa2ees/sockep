@@ -35,9 +35,11 @@ public:
     int getSock() const override;
 
 private:
+    void handleIncomingMessage() override;
     struct sockaddr_in saddr_;
     struct sockaddr_in serverSaddr_;
 
 };
 
-}
+} // namespace sockep
+

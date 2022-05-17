@@ -6,6 +6,9 @@
 
 #include "client/IClientSockEP.h"
 #include <atomic>
+#include <thread>
+#include <vector>
+#include <sys/poll.h>
 
 namespace sockep
 {
@@ -22,7 +25,7 @@ class ClientSockEP : public IClientSockEP
 {
 public:
     ClientSockEP() {};
-    ~ClientSockEP() {};
+    virtual ~ClientSockEP();
 
     bool isValid() override {return isValid_;};
     virtual int sendMessage(const char* msg, size_t msgLen) override = 0;
@@ -31,7 +34,20 @@ public:
     virtual int getMessage(char* msg, const int msgMaxLen) override = 0;
     virtual std::string to_str() const override = 0;
 
+    virtual int startRecvThread(std::function<void(const char*, size_t)> callback) override;
+    virtual int stopRecvThread() override;
+    virtual bool recvThreadRunning() override;
+
 protected:
+
+    // This is for the concrete implementations to handle in an implementation-specific way
+    virtual void handleIncomingMessage() = 0;
+
+    void runThread();
+    std::thread recvThread_;
+    std::atomic<bool> threadRunning_ {false};
+    std::function<void(const char*, size_t)> callback_;
+    int pipeFd_[2];
 
     ClientSockEPType sockType_;
     bool isValid_ {false};
@@ -40,5 +56,3 @@ protected:
 };
 
 }
-
-        

@@ -96,7 +96,12 @@ std::string UdpClientSockEP::getMessage()
 /******* CLIENT INTERFACE **********/
 int UdpClientSockEP::getMessage(char* msg, const int msgMaxLen)
 {
-    return recv(sock_, msg, msgMaxLen, MSG_NOSIGNAL);
+    if (threadRunning_)
+    {
+        return -1;
+    }
+    socklen_t serverSaddrLen = sizeof(struct sockaddr_in);
+    return recvfrom(sock_, msg, msgMaxLen, MSG_NOSIGNAL, (struct sockaddr *) &serverSaddr_, &serverSaddrLen);
 }
 
 /******* SERVER SIDE CLIENT INTERFACE *********/
@@ -139,4 +144,14 @@ void UdpClientSockEP::setSock(int sock)
 int UdpClientSockEP::getSock() const
 {
     return sock_;
+}
+
+void UdpClientSockEP::handleIncomingMessage()
+{
+    socklen_t serverSaddrLen = sizeof(struct sockaddr_in);
+    int msgLen =  recvfrom(sock_, msg_, MESSAGE_MAX_LEN, MSG_NOSIGNAL, (struct sockaddr *) &serverSaddr_, &serverSaddrLen);
+    if (callback_)
+    {
+        callback_(msg_, msgLen);
+    }
 }

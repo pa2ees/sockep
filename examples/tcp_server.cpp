@@ -35,7 +35,7 @@ int main()
     while (running)
     {
         usleep(1000 * 10); // 10 ms
-
+        
     }
     
     usleep(1000 * 100); // 10 ms

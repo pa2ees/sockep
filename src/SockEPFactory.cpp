@@ -55,18 +55,5 @@ std::unique_ptr<IClientSockEP> SockEPFactory::createUdpClientSockEP(std::string 
 {
     return std::unique_ptr<UdpClientSockEP> (new UdpClientSockEP(serverIpaddr, port));
 }
-// ISockEP *SockEPFactory::createUnixStreamSockEP()
-// {
-//     return new UnixStreamSockEP();
-// }
-// ISockEP *SockEPFactory::createTCPSockEP()
-// {
-//     ISockEP *val;
-//     return val;
-// }
-// ISockEP *SockEPFactory::createUDPSockEP()
-// {
-//     ISockEP *val;
-//     return val;
-// }
+
 

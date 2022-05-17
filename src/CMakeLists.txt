@@ -11,6 +11,7 @@ target_sources(sockep PRIVATE
   server/UnixStreamServerSockEP.cpp
   server/TcpServerSockEP.cpp
   server/UdpServerSockEP.cpp
+  client/ClientSockEP.cpp
   client/UnixDgramClientSockEP.cpp
   client/UnixStreamClientSockEP.cpp
   client/TcpClientSockEP.cpp

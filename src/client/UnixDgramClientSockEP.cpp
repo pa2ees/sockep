@@ -79,6 +79,10 @@ std::string UnixDgramClientSockEP::getMessage()
 
 int UnixDgramClientSockEP::getMessage(char* msg, const int msgMaxLen)
 {
+    if (threadRunning_)
+    {
+        return -1;
+    }
     socklen_t serverSaddrLen = sizeof(struct sockaddr_un);
     
     return recvfrom(sock_, msg, msgMaxLen, 0, (struct sockaddr *) &serverSaddr_, &serverSaddrLen);
@@ -116,3 +120,13 @@ socklen_t UnixDgramClientSockEP::getSaddrLen() const
     return sizeof(saddr_);
 }
 
+void UnixDgramClientSockEP::handleIncomingMessage()
+{
+    socklen_t serverSaddrLen = sizeof(struct sockaddr_un);
+    
+    int msgLen = recvfrom(sock_, msg_, MESSAGE_MAX_LEN, MSG_NOSIGNAL, (struct sockaddr *) &serverSaddr_, &serverSaddrLen);
+    if (callback_)
+    {
+        callback_(msg_, msgLen);
+    }
+}

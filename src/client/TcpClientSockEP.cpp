@@ -52,6 +52,7 @@ TcpClientSockEP::TcpClientSockEP() {}
 
 TcpClientSockEP::~TcpClientSockEP()
 {
+    std::cout << "Destructing TcpClientSockEP\n";
     // unlink(saddr_.sin_path);
 }
 
@@ -88,6 +89,10 @@ std::string TcpClientSockEP::getMessage()
 /******* CLIENT INTERFACE **********/
 int TcpClientSockEP::getMessage(char* msg, const int msgMaxLen)
 {
+    if (threadRunning_)
+    {
+        return -1;
+    }
     return recv(sock_, msg, msgMaxLen, MSG_NOSIGNAL);
 }
 
@@ -131,4 +136,14 @@ void TcpClientSockEP::setSock(int sock)
 int TcpClientSockEP::getSock() const
 {
     return sock_;
+}
+
+void TcpClientSockEP::handleIncomingMessage()
+{
+    int msgLen = recv(sock_, msg_, MESSAGE_MAX_LEN, MSG_NOSIGNAL);
+    if (callback_)
+    {
+        callback_(msg_, msgLen);
+    }
+    
 }

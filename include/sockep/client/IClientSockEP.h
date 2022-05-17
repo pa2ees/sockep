@@ -4,6 +4,7 @@
 #include <string>
 // #include <array>
 #include <sys/socket.h>
+#include <functional>
 
 // #define SOCKEP_CLIENT_RECV_MSG_MAX_LEN 1000
 // #define SOCKEP_CLIENT_TRANSMIT_MSG_MAX_LEN 1000
@@ -14,7 +15,7 @@ namespace sockep
 class IClientSockEP
 {
 public:
-    ~IClientSockEP() {};
+    virtual ~IClientSockEP() {};
 
     virtual bool isValid() = 0;
 
@@ -29,6 +30,11 @@ public:
     // virtual int getMessage(std::array<char, SOCKEP_CLIENT_RECV_MSG_MAX_LEN> &msg) = 0;
     virtual int getMessage(char* msg, const int msgMaxLen) = 0;
     virtual std::string to_str() const = 0;
+
+    virtual int startRecvThread(std::function<void(const char*, size_t)> callback) = 0;
+    virtual int stopRecvThread() = 0;
+    virtual bool recvThreadRunning() = 0;
+    
 
 };
 

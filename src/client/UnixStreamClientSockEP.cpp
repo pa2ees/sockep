@@ -78,6 +78,10 @@ std::string UnixStreamClientSockEP::getMessage()
 /******* CLIENT INTERFACE **********/
 int UnixStreamClientSockEP::getMessage(char* msg, const int msgMaxLen)
 {
+    if (threadRunning_)
+    {
+        return -1;
+    }
     return recv(sock_, msg, msgMaxLen, MSG_NOSIGNAL);
 }
 
@@ -121,4 +125,13 @@ void UnixStreamClientSockEP::setSock(int sock)
 int UnixStreamClientSockEP::getSock() const
 {
     return sock_;
+}
+
+void UnixStreamClientSockEP::handleIncomingMessage()
+{
+    int msgLen = recv(sock_, msg_, MESSAGE_MAX_LEN, MSG_NOSIGNAL);
+    if (callback_)
+    {
+        callback_(msg_, msgLen);
+    }
 }

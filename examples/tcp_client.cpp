@@ -18,6 +18,12 @@ int main(int argc, char *argv[])
     
     std::cout << "Client valid: " << (client->isValid() ? "true" : "false") << std::endl;
 
+    auto handleReceiveData = [] (const char *msg, size_t msgLen)
+        {
+            std::string message(msg, msgLen);
+            std::cout << "Received: " << message << "\n";
+        };
+    
     std::string inp;
     while (true)
     {
@@ -36,6 +42,16 @@ int main(int argc, char *argv[])
         if (inp == "read")
         {
             std::cout << client->getMessage() << "\n";
+        }
+        if (inp == "thread")
+        {
+            std::cout << "Starting recv thread...\n";
+            client->startRecvThread(handleReceiveData);
+        }
+        if (inp == "stopThread")
+        {
+            std::cout << "Stopping recv thread...\n";
+            client->stopRecvThread();
         }
     }
 
