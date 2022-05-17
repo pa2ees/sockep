@@ -6,7 +6,7 @@ using namespace sockep;
 
 UnixStreamClientSockEP::UnixStreamClientSockEP(std::string bindPath, std::string serverPath)
 {
-    std::cout << "Constructing Unix Stream Client Socket..." << std::endl;
+    // std::cout << "Constructing Unix Stream Client Socket..." << std::endl;
 
     memset(&saddr_, 0, sizeof(struct sockaddr_un));
     strncpy(saddr_.sun_path, bindPath.c_str(), sizeof(saddr_.sun_path) - 1);
@@ -45,15 +45,22 @@ UnixStreamClientSockEP::UnixStreamClientSockEP(std::string bindPath, std::string
 // for server side client creation
 UnixStreamClientSockEP::UnixStreamClientSockEP() {}
 
-/******* BOTH INTERFACES **********/
-void UnixStreamClientSockEP::sendMessage(const char* msg, size_t msgLen)
-{    
-    send(sock_, msg, msgLen, 0);
+UnixStreamClientSockEP::~UnixStreamClientSockEP()
+{
+    unlink(saddr_.sun_path);
 }
 
-void UnixStreamClientSockEP::sendMessage(const std::string &msg)
+
+/******* BOTH INTERFACES **********/
+int UnixStreamClientSockEP::sendMessage(const char* msg, size_t msgLen)
 {
-    sendMessage(msg.c_str(), msg.size());
+    // MSG_NOSIGNAL prevents SIGPIPE from killing the program if the server goes away
+    return send(sock_, msg, msgLen, MSG_NOSIGNAL); 
+}
+
+int UnixStreamClientSockEP::sendMessage(const std::string &msg)
+{
+    return sendMessage(msg.c_str(), msg.size());
 }
 
 std::string UnixStreamClientSockEP::to_str() const
@@ -71,14 +78,18 @@ std::string UnixStreamClientSockEP::getMessage()
 /******* CLIENT INTERFACE **********/
 int UnixStreamClientSockEP::getMessage(char* msg, const int msgMaxLen)
 {
-    return recv(sock_, msg, msgMaxLen, 0);
+    if (threadRunning_)
+    {
+        return -1;
+    }
+    return recv(sock_, msg, msgMaxLen, MSG_NOSIGNAL);
 }
 
 /******* SERVER SIDE CLIENT INTERFACE *********/
 
 bool UnixStreamClientSockEP::operator== (ISSClientSockEP const *other)
 {
-    std::cout << "Comparing " << to_str() << " and " << other->to_str() << " with length " << other->getSaddrLen() << "\n";
+    // std::cout << "Comparing " << to_str() << " and " << other->to_str() << " with length " << other->getSaddrLen() << "\n";
     if (memcmp(&saddr_, other->getSaddr(), other->getSaddrLen()) == 0)
     {
         return true;
@@ -89,12 +100,6 @@ bool UnixStreamClientSockEP::operator== (ISSClientSockEP const *other)
 bool UnixStreamClientSockEP::operator== (ISSClientSockEP const &other)
 {
     return *this == &other;
-    // std::cout << "Comparing " << to_str() << " and " << other.to_str() << " with length " << other.getSaddrLen() << "\n";
-    // if (memcmp(&saddr_, other.getSaddr(), other.getSaddrLen()) == 0)
-    // {
-    //     return true;
-    // }
-    // return false;
 };
 
 void UnixStreamClientSockEP::clearSaddr()
@@ -120,4 +125,13 @@ void UnixStreamClientSockEP::setSock(int sock)
 int UnixStreamClientSockEP::getSock() const
 {
     return sock_;
+}
+
+void UnixStreamClientSockEP::handleIncomingMessage()
+{
+    int msgLen = recv(sock_, msg_, MESSAGE_MAX_LEN, MSG_NOSIGNAL);
+    if (callback_)
+    {
+        callback_(msg_, msgLen);
+    }
 }

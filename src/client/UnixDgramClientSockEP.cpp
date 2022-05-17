@@ -1,12 +1,13 @@
 #include "UnixDgramClientSockEP.h"
 
 #include <iostream>
+#include <sys/poll.h>
 
 using namespace sockep;
 
 UnixDgramClientSockEP::UnixDgramClientSockEP(std::string bindPath, std::string serverPath)
 {
-    std::cout << "Constructing Unix Datagram Client Socket..." << std::endl;
+    // std::cout << "Constructing Unix Datagram Client Socket..." << std::endl;
 
     memset(&saddr_, 0, sizeof(struct sockaddr_un));
     strncpy(saddr_.sun_path, bindPath.c_str(), sizeof(saddr_.sun_path) - 1);
@@ -35,17 +36,31 @@ UnixDgramClientSockEP::UnixDgramClientSockEP(std::string bindPath, std::string s
 }
 
 // for server side client creation
-UnixDgramClientSockEP::UnixDgramClientSockEP() {}
-
-/******* BOTH INTERFACES **********/
-void UnixDgramClientSockEP::sendMessage(const char* msg, size_t msgLen)
-{    
-    sendto(sock_, msg, msgLen, 0, (struct sockaddr *) &serverSaddr_, sizeof(serverSaddr_));
+UnixDgramClientSockEP::UnixDgramClientSockEP()
+{
+    // std::cout << "Constructing Unix Dgram Client\n";
 }
 
-void UnixDgramClientSockEP::sendMessage(const std::string &msg)
+UnixDgramClientSockEP::~UnixDgramClientSockEP()
 {
-    sendMessage(msg.c_str(), msg.size());
+    // std::cout << "Destructing Unix Dgram Client\n";
+    unlink(saddr_.sun_path);
+}
+
+/******* BOTH INTERFACES **********/
+int UnixDgramClientSockEP::sendMessage(const char* msg, size_t msgLen)
+{
+    if (msgLen > MESSAGE_MAX_LEN)
+    {
+        std::cerr << "Datagram message too long! Max Datagram length: " << MESSAGE_MAX_LEN << "\n";
+        return -1;
+    }
+    return sendto(sock_, msg, msgLen, 0, (struct sockaddr *) &serverSaddr_, sizeof(serverSaddr_));
+}
+
+int UnixDgramClientSockEP::sendMessage(const std::string &msg)
+{
+    return sendMessage(msg.c_str(), msg.size());
 }
 
 std::string UnixDgramClientSockEP::to_str() const
@@ -64,6 +79,10 @@ std::string UnixDgramClientSockEP::getMessage()
 
 int UnixDgramClientSockEP::getMessage(char* msg, const int msgMaxLen)
 {
+    if (threadRunning_)
+    {
+        return -1;
+    }
     socklen_t serverSaddrLen = sizeof(struct sockaddr_un);
     
     return recvfrom(sock_, msg, msgMaxLen, 0, (struct sockaddr *) &serverSaddr_, &serverSaddrLen);
@@ -73,7 +92,7 @@ int UnixDgramClientSockEP::getMessage(char* msg, const int msgMaxLen)
 
 bool UnixDgramClientSockEP::operator== (ISSClientSockEP const *other)
 {
-    std::cout << "Comparing " << to_str() << " and " << other->to_str() << " with length " << other->getSaddrLen() << "\n";
+    // std::cout << "Comparing " << to_str() << " and " << other->to_str() << " with length " << other->getSaddrLen() << "\n";
     if (memcmp(&saddr_, other->getSaddr(), other->getSaddrLen()) == 0)
     {
         return true;
@@ -101,3 +120,13 @@ socklen_t UnixDgramClientSockEP::getSaddrLen() const
     return sizeof(saddr_);
 }
 
+void UnixDgramClientSockEP::handleIncomingMessage()
+{
+    socklen_t serverSaddrLen = sizeof(struct sockaddr_un);
+    
+    int msgLen = recvfrom(sock_, msg_, MESSAGE_MAX_LEN, MSG_NOSIGNAL, (struct sockaddr *) &serverSaddr_, &serverSaddrLen);
+    if (callback_)
+    {
+        callback_(msg_, msgLen);
+    }
+}

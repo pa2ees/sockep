@@ -26,7 +26,7 @@ int main()
 {
     running = true;
 
-    srvr = std::unique_ptr<sockep::IServerSockEP>(sockep::SockEPFactory::createUnixStreamServerSockEP("/tmp/fartserver", messageHandler));
+    srvr = std::unique_ptr<sockep::IServerSockEP>(sockep::SockEPFactory::createUdpServerSockEP("", 5678, messageHandler));
 
     std::cout << "Server valid: " << (srvr->isValid() ? "true" : "false") << std::endl;
     srvr->startServer();

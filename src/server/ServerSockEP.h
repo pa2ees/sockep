@@ -1,5 +1,9 @@
 #pragma once
 
+#ifndef MESSAGE_MAX_LEN
+#define MESSAGE_MAX_LEN 5000
+#endif
+
 #include "server/IServerSockEP.h"
 #include "client/ISSClientSockEP.h"
 
@@ -10,6 +14,8 @@
 #include <cstring>
 #include <functional>
 #include <memory>
+
+#include <sys/poll.h>
 
 namespace sockep
 {
@@ -34,14 +40,15 @@ public:
     virtual void stopServer() override;
     bool serverRunning() override;
 
-    virtual void sendMessageToClient(int clientId, const char* msg, size_t msgLen) override = 0;
-    virtual void sendMessageToClient(int clientId, const std::string &msg) override = 0;
+    virtual int sendMessageToClient(int clientId, const char* msg, size_t msgLen) override = 0;
+    virtual int sendMessageToClient(int clientId, const std::string &msg) override = 0;
     virtual std::vector<int> getClientIds() override;
     virtual std::string to_str() override {std::string s = "howdy"; return s;};
 
 protected:
     virtual int addClient(std::unique_ptr<ISSClientSockEP> newClient);
-    virtual void runServer() = 0;
+    void runServer();
+    virtual void handlePfdUpdates(const std::vector<struct pollfd> &pfds, std::vector<struct pollfd> &newPfds, std::vector<struct pollfd> &removePfds) = 0;
     virtual void closeSocket();
 
     // allow concrete class to create the proper type of client
@@ -51,7 +58,7 @@ protected:
     std::atomic<bool> serverRunning_ {false};
     int sock_ = -1;
     bool isValid_ = false;
-    char msg_[1000];
+    char msg_[MESSAGE_MAX_LEN];
 
     // this should probably hold a unique pointer
     std::map<int, std::unique_ptr<ISSClientSockEP>> clients_;

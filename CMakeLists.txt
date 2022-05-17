@@ -17,6 +17,7 @@ target_include_directories(sockep PRIVATE include/sockep)
 add_subdirectory(src)
 
 add_subdirectory(examples)
+add_subdirectory(test)
 
 add_subdirectory(python)
 

@@ -3,18 +3,17 @@
 #include "ClientSockEP.h"
 #include "ISSClientSockEP.h"
 #include <iostream>
-#include <sys/un.h>
+#include <arpa/inet.h>
 
 namespace sockep
 {
     
-class UnixDgramClientSockEP : public ClientSockEP, public ISSClientSockEP
+class TcpClientSockEP : public ClientSockEP, public ISSClientSockEP
 {
 public:
-    UnixDgramClientSockEP(std::string bindPath, std::string serverPath);
-    UnixDgramClientSockEP(); // for server side client creation
-
-    ~UnixDgramClientSockEP();
+    TcpClientSockEP(std::string serverIpaddr, int port);
+    TcpClientSockEP(); // for server side client creation
+    ~TcpClientSockEP();
 
     // for both interfaces (Client and Server Side Client)
     int sendMessage(const char* msg, size_t msgLen) override;
@@ -31,15 +30,16 @@ public:
     void clearSaddr() override;
     struct sockaddr * getSaddr() const override;
     socklen_t getSaddrLen() const override;
-    void setSock(int sock) override {};
-    int getSock() const override { return -1; }
+
+    void setSock(int sock) override;
+    int getSock() const override;
 
 private:
+
     void handleIncomingMessage() override;
-    struct sockaddr_un saddr_;
-    struct sockaddr_un serverSaddr_;
+    struct sockaddr_in saddr_;
+    struct sockaddr_in serverSaddr_;
 
 };
 
-} // namespace sockep
-
+}
