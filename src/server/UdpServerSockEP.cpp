@@ -64,7 +64,7 @@ void UdpServerSockEP::handlePfdUpdates(const std::vector<struct pollfd> &pfds, s
 {
     for (auto &pfd : pfds)
     {
-        std::cout << "Fd: " << pfd.fd << " | events: " << pfd.events << " | revents : " << pfd.revents << "\n";
+        // std::cout << "Fd: " << pfd.fd << " | events: " << pfd.events << " | revents : " << pfd.revents << "\n";
         // handle receive socket
         if (pfd.fd == sock_ && pfd.revents & POLLIN)
         { // new client connection
@@ -85,25 +85,6 @@ void UdpServerSockEP::handlePfdUpdates(const std::vector<struct pollfd> &pfds, s
                 callback_(clientId, msg_, bytesReceived);
             }
 
-
-
-            // if (newClient == nullptr)
-            // { // something went wrong with the creation of the client
-            //     std::cerr << "Could not create new client\n";
-            //     continue;
-            // }
-            
-            // // add the new client to the list of new fds to add to the list
-            // // of fds after the for loop is done, to not invalidate iterators
-            // struct pollfd newPfd;
-            // newPfd.fd = newClient->getSock();
-            // newPfd.events = POLLIN;
-            // newPfds.push_back(newPfd);
-            
-            // clientsMutex_.lock();
-            // clients_[newPfd.fd] = std::move(newClient);
-            // clientsMutex_.unlock();
-            
         }
         else if (pfd.fd == pipeFd_[0] && pfd.revents & POLLHUP)
         { // need to terminate
@@ -116,29 +97,6 @@ void UdpServerSockEP::handlePfdUpdates(const std::vector<struct pollfd> &pfds, s
             std::cerr << "No idea what happened here" << std::endl;
             serverRunning_ = false;
             break;
-            // if (pfd.revents & POLLHUP)
-            // { // must be before POLLIN because a hup sets POLLIN bit also
-            //     clientsMutex_.lock();
-            //     removePfds.push_back(pfd);
-            //     clients_.erase(pfd.fd);
-                
-            //     clientsMutex_.unlock();
-                
-            // }
-            // else if (pfd.revents & POLLIN)
-            // { // data to read
-            //     // std::cout << "Got message from socket " << pfd.fd << "\n";
-                
-            //     clientsMutex_.lock();
-            //     int bytesReceived = clients_[pfd.fd]->getMessage(msg_, sizeof(msg_));
-                
-            //     clientsMutex_.unlock();
-                
-            //     if (callback_)
-            //     {
-            //         callback_(pfd.fd, msg_, bytesReceived);
-            //     }
-            // }
         }
     }
 }
@@ -146,21 +104,6 @@ void UdpServerSockEP::handlePfdUpdates(const std::vector<struct pollfd> &pfds, s
 std::unique_ptr<ISSClientSockEP> UdpServerSockEP::createNewClient()
 {
     return std::unique_ptr<UdpClientSockEP> (new UdpClientSockEP());
-    // std::unique_ptr<UdpClientSockEP> newClient = std::unique_ptr<UdpClientSockEP> (new UdpClientSockEP());
-    
-    // newClient->clearSaddr();
-
-    // auto len = newClient->getSaddrLen();
-
-    // int newClientSock = accept(sock_, newClient->getSaddr(), &len);
-    // if (newClientSock == -1)
-    // { // failed to create socket for new client
-    //     std::cerr << "Failed to create socket for new client\n";
-    //     return nullptr;
-    // }
-    // newClient->setSock(newClientSock);
-
-    // return newClient;
 }
 
 int UdpServerSockEP::sendMessageToClient(int clientId, const char* msg, size_t msgLen)

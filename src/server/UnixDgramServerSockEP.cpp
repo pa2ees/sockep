@@ -41,86 +41,6 @@ UnixDgramServerSockEP::~UnixDgramServerSockEP()
 }
 
 
-// void UnixDgramServerSockEP::runServer()
-// {
-    // if (!isValid())
-    // {
-    //     std::cerr << "Socket is not valid, cannot run a server" << std::endl;
-    //     serverRunning_ = false;
-    //     return;
-    // }
-
-    // // std::cout << "Successfully started server thread" << std::endl;
-    // fd_set rfds;
-
-    // // create the pollfds
-    // std::vector<struct pollfd> pfds;
-
-    // // create temporary pfd to add to vector
-    // struct pollfd pfd;
-
-    // // create listen socket
-    // pfd.fd = sock_;
-    // pfd.events = POLLIN;
-    // pfds.push_back(pfd);
-
-    // // create pipe socket
-    // pfd.fd = pipeFd_[0];
-    // pfd.events = 0; // only listen for POLLHUP (other end of pipe closed)
-    // pfds.push_back(pfd);
-    
-    // while (serverRunning_)
-    // {
-    //     // std::cout << "server tick" << std::endl;
-
-    //     // -1 == no timeout
-    //     int pollStatus = poll(pfds.data(), pfds.size(), -1);
-    //     if (pollStatus == -1)
-    //     {
-    //         perror("problem with poll");
-    //         serverRunning_ = false;
-    //         break;
-    //     }
-
-    //     for (auto pfd : pfds)
-    //     {
-    //         // std::cout << "Fd: " << pfd.fd << " | events: " << pfd.events << " | revents : " << pfd.revents << "\n";
-    //         // handle receive socket
-    //         if (pfd.fd == sock_ && pfd.revents & POLLIN)
-    //         { // new client connection
-    //             std::unique_ptr<ISSClientSockEP> newClient = createNewClient();
-    //             newClient->clearSaddr();
-
-    //             auto len = newClient->getSaddrLen();
-    //             int bytesReceived = recvfrom(sock_, msg_, sizeof(msg_), 0, newClient->getSaddr(), &len);
-    //             msg_[bytesReceived] = '\0';
-    //             // std::cout << "Received " << bytesReceived << " bytes from " << newClient->to_str() << std::endl;
-
-    //             // this will always return the client id, whether it's already exists or not
-    //             int clientId = addClient(std::move(newClient));
-
-    //             if (callback_)
-    //             {
-    //                 callback_(clientId, msg_, bytesReceived);
-    //             }
-    //         }
-    //         else if (pfd.fd == pipeFd_[0] && pfd.revents & POLLHUP)
-    //         { // need to terminate
-    //             serverRunning_ = false;
-    //             // std::cout << "stopping server" << std::endl;
-    //             break;
-    //         }
-    //         else if (pfd.fd != sock_ && pfd.fd != pipeFd_[0])
-    //         {
-    //             std::cerr << "No idea what happened here" << std::endl;
-    //             serverRunning_ = false;
-    //             break;
-    //         }
-    //     }
-    // }
-  
-// }
-
 void UnixDgramServerSockEP::handlePfdUpdates(const std::vector<struct pollfd> &pfds, std::vector<struct pollfd> &newPfds, std::vector<struct pollfd> &removePfds)
 {
     for (const struct pollfd &pfd : pfds)
@@ -130,6 +50,7 @@ void UnixDgramServerSockEP::handlePfdUpdates(const std::vector<struct pollfd> &p
         if (pfd.fd == sock_ && pfd.revents & POLLIN)
         { // new client connection
             std::unique_ptr<ISSClientSockEP> newClient = createNewClient();
+            // std::cout << "Got new client\n";
             newClient->clearSaddr();
             
             auto len = newClient->getSaddrLen();
@@ -139,7 +60,6 @@ void UnixDgramServerSockEP::handlePfdUpdates(const std::vector<struct pollfd> &p
             
             // this will always return the client id, whether it's already exists or not
             int clientId = addClient(std::move(newClient));
-            
             if (callback_)
             {
                 callback_(clientId, msg_, bytesReceived);
