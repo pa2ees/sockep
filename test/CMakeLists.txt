@@ -10,10 +10,10 @@ add_custom_target(tests
   )
 
 
-target_link_libraries(unixdgram_test PRIVATE sockep)
-target_link_libraries(unixstream_test PRIVATE sockep)
-target_link_libraries(udp_test PRIVATE sockep)
-target_link_libraries(tcp_test PRIVATE sockep)
+target_link_libraries(unixdgram_test PRIVATE ${SOCKEP})
+target_link_libraries(unixstream_test PRIVATE ${SOCKEP})
+target_link_libraries(udp_test PRIVATE ${SOCKEP})
+target_link_libraries(tcp_test PRIVATE ${SOCKEP})
 
 target_sources(unixdgram_test PRIVATE
 unixdgram_test.cpp

@@ -14,14 +14,14 @@ add_custom_target(examples
   )
 
 
-target_link_libraries(unixdgram_server PRIVATE sockep)
-target_link_libraries(unixdgram_client PRIVATE sockep)
-target_link_libraries(unixstream_server PRIVATE sockep)
-target_link_libraries(unixstream_client PRIVATE sockep)
-target_link_libraries(tcp_server PRIVATE sockep)
-target_link_libraries(tcp_client PRIVATE sockep)
-target_link_libraries(udp_server PRIVATE sockep)
-target_link_libraries(udp_client PRIVATE sockep)
+target_link_libraries(unixdgram_server PRIVATE ${SOCKEP})
+target_link_libraries(unixdgram_client PRIVATE ${SOCKEP})
+target_link_libraries(unixstream_server PRIVATE ${SOCKEP})
+target_link_libraries(unixstream_client PRIVATE ${SOCKEP})
+target_link_libraries(tcp_server PRIVATE ${SOCKEP})
+target_link_libraries(tcp_client PRIVATE ${SOCKEP})
+target_link_libraries(udp_server PRIVATE ${SOCKEP})
+target_link_libraries(udp_client PRIVATE ${SOCKEP})
 
 
 target_sources(unixdgram_server PRIVATE
