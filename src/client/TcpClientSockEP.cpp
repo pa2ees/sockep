@@ -52,7 +52,7 @@ TcpClientSockEP::TcpClientSockEP() {}
 
 TcpClientSockEP::~TcpClientSockEP()
 {
-    std::cout << "Destructing TcpClientSockEP\n";
+    // std::cout << "Destructing TcpClientSockEP\n";
     // unlink(saddr_.sin_path);
 }
 

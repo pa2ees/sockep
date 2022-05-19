@@ -94,10 +94,10 @@ void ClientSockEP::runThread()
 
 int ClientSockEP::stopRecvThread()
 {
-    std::cout << "Stopping recv thread\n";
+    // std::cout << "Stopping recv thread\n";
     if (!threadRunning_)
     {
-        std::cout << "Thread not running\n";
+        // std::cout << "Thread not running\n";
         return 0;
     }
     close(pipeFd_[1]);
