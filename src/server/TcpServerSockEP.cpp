@@ -67,7 +67,7 @@ void TcpServerSockEP::handlePfdUpdates(const std::vector<struct pollfd> &pfds, s
 {
 	for (auto &pfd : pfds)
 	{
-		std::cout << "Fd: " << pfd.fd << " | events: " << pfd.events << " | revents : " << pfd.revents << "\n";
+		// std::cout << "Fd: " << pfd.fd << " | events: " << pfd.events << " | revents : " << pfd.revents << "\n";
 		// handle receive socket
 		if (pfd.fd == sock_ && pfd.revents & POLLIN)
 		{ // new client connection
