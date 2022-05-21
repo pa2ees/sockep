@@ -92,8 +92,9 @@ void UnixStreamServerSockEP::handlePfdUpdates(const std::vector<struct pollfd> &
 				clientsMutex_.lock();
 				removePfds.push_back(pfd);
 				clients_.erase(pfd.fd);
-
 				clientsMutex_.unlock();
+
+				std::cout << "Client " << pfd.fd << " disconnected.\n";
 			}
 			else if (pfd.revents & POLLIN)
 			{ // data to read
@@ -101,7 +102,6 @@ void UnixStreamServerSockEP::handlePfdUpdates(const std::vector<struct pollfd> &
 
 				clientsMutex_.lock();
 				int bytesReceived = clients_[pfd.fd]->getMessage(msg_, sizeof(msg_));
-
 				clientsMutex_.unlock();
 
 				if (callback_)

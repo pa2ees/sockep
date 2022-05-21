@@ -102,19 +102,32 @@ void TcpServerSockEP::handlePfdUpdates(const std::vector<struct pollfd> &pfds, s
 				clientsMutex_.lock();
 				removePfds.push_back(pfd);
 				clients_.erase(pfd.fd);
-
 				clientsMutex_.unlock();
+
+				std::cout << "Client " << pfd.fd << " disconnected.\n";
 			}
 			else if (pfd.revents & POLLIN)
 			{ // data to read
 				// std::cout << "Got message from socket " << pfd.fd << "\n";
 
+				bool clientDisconnect = false;
+
 				clientsMutex_.lock();
 				int bytesReceived = clients_[pfd.fd]->getMessage(msg_, sizeof(msg_));
 
+				if (bytesReceived == 0)
+				{ // client disconnected
+					clientDisconnect = true;
+					removePfds.push_back(pfd);
+					clients_.erase(pfd.fd);
+				}
 				clientsMutex_.unlock();
 
-				if (callback_)
+				if (clientDisconnect)
+				{ // cout is slow, use it outside the clientsMutex_ lock
+					std::cout << "Client " << pfd.fd << " disconnected.\n";
+				}
+				else if (callback_)
 				{
 					callback_(pfd.fd, msg_, bytesReceived);
 				}
