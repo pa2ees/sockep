@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required(VERSION 3.21)
 
 project(sockep CXX)
 
@@ -18,8 +18,10 @@ target_include_directories(${SOCKEP} PRIVATE include/sockep)
 
 add_subdirectory(src)
 
-add_subdirectory(examples)
-add_subdirectory(test)
-
-add_subdirectory(python)
+if (PROJECT_IS_TOP_LEVEL) # New in CMAKE 3.21
+  add_subdirectory(examples)
+  add_subdirectory(test)
+  
+  add_subdirectory(python)
+endif()
 
