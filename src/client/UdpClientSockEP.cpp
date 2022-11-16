@@ -36,12 +36,12 @@ UdpClientSockEP::UdpClientSockEP(std::string serverIpaddr, int port)
 	//     return;
 	// }
 
-	int bind_retval = bind(sock_, (struct sockaddr *)&saddr_, sizeof(saddr_));
-	if (bind_retval == -1)
-	{
-		std::cerr << "Failed to bind socket\n";
-		return;
-	}
+	// int bind_retval = bind(sock_, (struct sockaddr *)&saddr_, sizeof(saddr_));
+	// if (bind_retval == -1)
+	// {
+	// 	std::cerr << "Failed to bind socket\n";
+	// 	return;
+	// }
 
 	int connect_retval = connect(sock_, (struct sockaddr *)&serverSaddr_, sizeof(serverSaddr_));
 	if (connect_retval == -1)
