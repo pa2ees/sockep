@@ -35,7 +35,11 @@ public:
 	int getSock() const override;
 
 private:
+	bool connectSocket();
+	bool disconnectSocket();
+	bool reconnectSocket();
 	void handleIncomingMessage() override;
+	bool handleError(int error) override;
 	struct sockaddr_in saddr_;
 	struct sockaddr_in serverSaddr_;
 };

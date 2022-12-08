@@ -20,39 +20,59 @@ UdpClientSockEP::UdpClientSockEP(std::string serverIpaddr, int port)
 		return;
 	}
 
+	bool connected = connectSocket();
+	if (!connected)
+	{
+		return;
+	}
+
+	isValid_ = true;
+}
+
+bool UdpClientSockEP::connectSocket()
+{
+	if (sock_ != -1)
+	{
+		return true;
+	}
+
 	sock_ = socket(AF_INET, SOCK_DGRAM, 0);
 	if (sock_ == -1)
 	{
 		std::cerr << "Failed to create socket!" << std::endl;
-		return;
+		return false;
 	}
 
-
-	// int sockOptValue = 1;
-	// int setsockopt_retval = setsockopt(sock_, SOL_SOCKET, SO_REUSEADDR, &sockOptValue, sizeof(sockOptValue));
-	// if (setsockopt_retval == -1)
-	// {
-	//     std::cerr << "Failed to set sock options!\n";
-	//     return;
-	// }
-
-	int bind_retval = bind(sock_, (struct sockaddr *)&saddr_, sizeof(saddr_));
-	if (bind_retval == -1)
-	{
-		std::cerr << "Failed to bind socket\n";
-		return;
-	}
-
+	// std::cout << "Connecting socket...\n";
 	int connect_retval = connect(sock_, (struct sockaddr *)&serverSaddr_, sizeof(serverSaddr_));
 	if (connect_retval == -1)
 	{
 		std::cerr << "Failed to connect client to server\n";
 		std::cerr << "Errno: " << errno << "\n";
 		close(sock_);
-		return;
+		return false;
 	}
+	return true;
+}
 
-	isValid_ = true;
+bool UdpClientSockEP::disconnectSocket()
+{
+	// std::cout << "Closing socket...\n";
+	close(sock_);
+	sock_ = -1;
+	return true;
+}
+
+bool UdpClientSockEP::reconnectSocket()
+{
+	disconnectSocket();
+	return connectSocket();
+}
+
+bool UdpClientSockEP::handleError(int error)
+{
+	std::cout << "Unable to send message to UDP server. Server could be unavailable.\n";
+	return reconnectSocket();
 }
 
 // for server side client creation

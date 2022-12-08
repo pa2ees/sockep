@@ -68,11 +68,13 @@ void ClientSockEP::runThread()
 		}
 		if (pipePfd.revents & POLLHUP)
 		{ // pipe closed, need to terminate
+			std::cout << "Pipe POLLHUP\n";
 			threadRunning_ = false;
 			break;
 		}
 		else if (sockPfd.revents & POLLHUP)
 		{ // server closed connection, need to terminate
+			std::cout << "Sock POLLHUP\n";
 			threadRunning_ = false;
 			isValid_ = false;
 			break;
@@ -82,9 +84,24 @@ void ClientSockEP::runThread()
 
 			handleIncomingMessage();
 		}
+		else if (sockPfd.revents & POLLERR)
+		{
+			bool socketOk = handleError(POLLERR);
+			// std::cout << "Unable to send message to server. Server could be unavailable.\n";
+			// bool reconnected = reconnectSocket();
+			if (!socketOk)
+			{
+				std::cerr << "Problem handling error " << POLLERR << "\n"
+				          << "Shutting down receive thread\n";
+				isValid_ = false;
+				threadRunning_ = false;
+			}
+		}
 		else
 		{ // no idea what happened here
 			std::cerr << "Error handling poll, status: " << pollStatus << "\n";
+			std::cerr << "pipePfd.revents: " << pipePfd.revents << "\n";
+			std::cerr << "sockPfd.revents: " << sockPfd.revents << "\n";
 			isValid_ = false;
 			threadRunning_ = false;
 		}

@@ -4,6 +4,12 @@
 #include <iostream>
 #include <memory>
 
+void clientCallback(const char *msg, size_t msgLen)
+{
+	std::string message(msg, msgLen);
+	std::cout << "Got message from server: " << message << "\n";
+}
+
 int main(int argc, char *argv[])
 {
 	std::unique_ptr<sockep::IClientSockEP> client;
@@ -20,6 +26,7 @@ int main(int argc, char *argv[])
 
 	std::cout << "Client valid: " << (client->isValid() ? "true" : "false") << std::endl;
 
+	client->startRecvThread(clientCallback);
 	std::string inp;
 	while (true)
 	{

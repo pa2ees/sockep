@@ -41,6 +41,7 @@ public:
 protected:
 	// This is for the concrete implementations to handle in an implementation-specific way
 	virtual void handleIncomingMessage() = 0;
+	virtual bool handleError(int error) { return false; };
 
 	void runThread();
 	std::thread recvThread_;
