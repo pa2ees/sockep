@@ -3,14 +3,16 @@
 #include <cstring> // memset
 #include <iostream>
 
+#include "simpleLogger/SimpleLogger.h"
+SETUP_SIMPLE_LOGGER(simpleLogger);
+
 using namespace sockep;
 
 UdpClientSockEP::UdpClientSockEP(std::string serverIpaddr, int port)
 {
-	// std::cout << "Constructing Unix Stream Client Socket..." << std::endl;
+	simpleLogger.debug << "Constructing Unix Stream Client Socket...\n";
 
 	memset(&serverSaddr_, 0, sizeof(struct sockaddr_in));
-	// strncpy(saddr_.sin_path, bindPath.c_str(), sizeof(saddr_.sin_path) - 1);
 	serverSaddr_.sin_family = AF_INET;
 	serverSaddr_.sin_port = htons(port);
 	serverSaddr_.sin_addr.s_addr = inet_addr(serverIpaddr.c_str());
@@ -39,17 +41,18 @@ bool UdpClientSockEP::connectSocket()
 	sock_ = socket(AF_INET, SOCK_DGRAM, 0);
 	if (sock_ == -1)
 	{
-		std::cerr << "Failed to create socket!" << std::endl;
+		simpleLogger.error << "Failed to create socket!\n";
 		return false;
 	}
 
-	// std::cout << "Connecting socket...\n";
+	simpleLogger.debug << "Connecting socket...\n";
 	int connect_retval = connect(sock_, (struct sockaddr *)&serverSaddr_, sizeof(serverSaddr_));
 	if (connect_retval == -1)
 	{
-		std::cerr << "Failed to connect client to server\n";
-		std::cerr << "Errno: " << errno << "\n";
+		simpleLogger.error << "Failed to connect client to server\n";
+		simpleLogger.error << "Errno: " << errno << "\n";
 		close(sock_);
+		sock_ = -1;
 		return false;
 	}
 	return true;
@@ -57,7 +60,7 @@ bool UdpClientSockEP::connectSocket()
 
 bool UdpClientSockEP::disconnectSocket()
 {
-	// std::cout << "Closing socket...\n";
+	simpleLogger.debug << "Closing socket...\n";
 	close(sock_);
 	sock_ = -1;
 	return true;
@@ -71,7 +74,7 @@ bool UdpClientSockEP::reconnectSocket()
 
 bool UdpClientSockEP::handleError(int error)
 {
-	std::cout << "Unable to send message to UDP server. Server could be unavailable.\n";
+	simpleLogger.warning << "Unable to send message to UDP server. Server could be unavailable.\n";
 	return reconnectSocket();
 }
 
@@ -128,8 +131,8 @@ int UdpClientSockEP::getMessage(char *msg, const int msgMaxLen)
 
 bool UdpClientSockEP::operator==(ISSClientSockEP const *other)
 {
-	// std::cout << "Comparing " << to_str() << " and " << other->to_str() << " with length " << other->getSaddrLen() <<
-	// "\n";
+	simpleLogger.debug << "Comparing " << to_str() << " and " << other->to_str() << " with length "
+	                   << other->getSaddrLen() << "\n";
 	if (memcmp(&saddr_, other->getSaddr(), other->getSaddrLen()) == 0)
 	{
 		return true;

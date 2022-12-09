@@ -2,11 +2,14 @@
 
 #include <iostream>
 
+#include "simpleLogger/SimpleLogger.h"
+SETUP_SIMPLE_LOGGER(simpleLogger);
+
 using namespace sockep;
 
 UnixStreamClientSockEP::UnixStreamClientSockEP(std::string bindPath, std::string serverPath)
 {
-	// std::cout << "Constructing Unix Stream Client Socket..." << std::endl;
+	simpleLogger.debug << "Constructing Unix Stream Client Socket...\n";
 
 	memset(&saddr_, 0, sizeof(struct sockaddr_un));
 	strncpy(saddr_.sun_path, bindPath.c_str(), sizeof(saddr_.sun_path) - 1);
@@ -19,7 +22,7 @@ UnixStreamClientSockEP::UnixStreamClientSockEP(std::string bindPath, std::string
 	sock_ = socket(AF_UNIX, SOCK_STREAM, 0);
 	if (sock_ == -1)
 	{
-		std::cerr << "Failed to create socket!" << std::endl;
+		simpleLogger.error << "Failed to create socket!\n";
 		return;
 	}
 
@@ -27,14 +30,14 @@ UnixStreamClientSockEP::UnixStreamClientSockEP(std::string bindPath, std::string
 	int bind_retval = bind(sock_, (struct sockaddr *)&saddr_, sizeof(saddr_));
 	if (bind_retval == -1)
 	{
-		std::cerr << "Failed to bind socket to: " << saddr_.sun_path << std::endl;
+		simpleLogger.error << "Failed to bind socket to: " << saddr_.sun_path << "\n";
 		return;
 	}
 
 	int connect_retval = connect(sock_, (struct sockaddr *)&serverSaddr_, sizeof(serverSaddr_));
 	if (connect_retval == -1)
 	{
-		std::cerr << "Failed to connect client to server: " << serverSaddr_.sun_path << "\n";
+		simpleLogger.error << "Failed to connect client to server: " << serverSaddr_.sun_path << "\n";
 		close(sock_);
 		return;
 	}
@@ -89,8 +92,8 @@ int UnixStreamClientSockEP::getMessage(char *msg, const int msgMaxLen)
 
 bool UnixStreamClientSockEP::operator==(ISSClientSockEP const *other)
 {
-	// std::cout << "Comparing " << to_str() << " and " << other->to_str() << " with length " << other->getSaddrLen() <<
-	// "\n";
+	simpleLogger.debug << "Comparing " << to_str() << " and " << other->to_str() << " with length "
+	                   << other->getSaddrLen() << "\n";
 	if (memcmp(&saddr_, other->getSaddr(), other->getSaddrLen()) == 0)
 	{
 		return true;

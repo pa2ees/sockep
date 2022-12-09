@@ -3,11 +3,14 @@
 #include <iostream>
 #include <sys/poll.h>
 
+#include "simpleLogger/SimpleLogger.h"
+SETUP_SIMPLE_LOGGER(simpleLogger);
+
 using namespace sockep;
 
 UnixDgramClientSockEP::UnixDgramClientSockEP(std::string bindPath, std::string serverPath)
 {
-	// std::cout << "Constructing Unix Datagram Client Socket..." << std::endl;
+	simpleLogger.debug << "Constructing Unix Datagram Client Socket...\n";
 
 	memset(&saddr_, 0, sizeof(struct sockaddr_un));
 	strncpy(saddr_.sun_path, bindPath.c_str(), sizeof(saddr_.sun_path) - 1);
@@ -20,7 +23,7 @@ UnixDgramClientSockEP::UnixDgramClientSockEP(std::string bindPath, std::string s
 	sock_ = socket(AF_UNIX, SOCK_DGRAM, 0);
 	if (sock_ == -1)
 	{
-		std::cerr << "Failed to create socket!" << std::endl;
+		simpleLogger.error << "Failed to create socket!\n";
 		return;
 	}
 
@@ -28,7 +31,7 @@ UnixDgramClientSockEP::UnixDgramClientSockEP(std::string bindPath, std::string s
 	int bind_retval = bind(sock_, (struct sockaddr *)&saddr_, sizeof(saddr_));
 	if (bind_retval == -1)
 	{
-		std::cerr << "Failed to bind socket to: " << saddr_.sun_path << std::endl;
+		simpleLogger.error << "Failed to bind socket to: " << saddr_.sun_path << "\n";
 		return;
 	}
 
@@ -38,12 +41,12 @@ UnixDgramClientSockEP::UnixDgramClientSockEP(std::string bindPath, std::string s
 // for server side client creation
 UnixDgramClientSockEP::UnixDgramClientSockEP()
 {
-	// std::cout << "Constructing Unix Dgram Client\n";
+	simpleLogger.debug << "Constructing Unix Dgram Client\n";
 }
 
 UnixDgramClientSockEP::~UnixDgramClientSockEP()
 {
-	// std::cout << "Destructing Unix Dgram Client\n";
+	simpleLogger.debug << "Destructing Unix Dgram Client\n";
 	unlink(saddr_.sun_path);
 }
 
@@ -52,7 +55,7 @@ int UnixDgramClientSockEP::sendMessage(const char *msg, size_t msgLen)
 {
 	if (msgLen > MESSAGE_MAX_LEN)
 	{
-		std::cerr << "Datagram message too long! Max Datagram length: " << MESSAGE_MAX_LEN << "\n";
+		simpleLogger.error << "Datagram message too long! Max Datagram length: " << MESSAGE_MAX_LEN << "\n";
 		return -1;
 	}
 	return sendto(sock_, msg, msgLen, 0, (struct sockaddr *)&serverSaddr_, sizeof(serverSaddr_));
@@ -92,8 +95,8 @@ int UnixDgramClientSockEP::getMessage(char *msg, const int msgMaxLen)
 
 bool UnixDgramClientSockEP::operator==(ISSClientSockEP const *other)
 {
-	// std::cout << "Comparing " << to_str() << " and " << other->to_str() << " with length " << other->getSaddrLen() <<
-	// "\n";
+	simpleLogger.debug << "Comparing " << to_str() << " and " << other->to_str() << " with length "
+	                   << other->getSaddrLen() << "\n";
 	if (memcmp(&saddr_, other->getSaddr(), other->getSaddrLen()) == 0)
 	{
 		return true;

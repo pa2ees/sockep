@@ -3,14 +3,16 @@
 #include <cstring> // memset
 #include <iostream>
 
+#include "simpleLogger/SimpleLogger.h"
+SETUP_SIMPLE_LOGGER(simpleLogger);
+
 using namespace sockep;
 
 TcpClientSockEP::TcpClientSockEP(std::string serverIpaddr, int port)
 {
-	// std::cout << "Constructing Unix Stream Client Socket..." << std::endl;
+	simpleLogger.debug << "Constructing Unix Stream Client Socket...\n";
 
 	memset(&serverSaddr_, 0, sizeof(struct sockaddr_in));
-	// strncpy(saddr_.sin_path, bindPath.c_str(), sizeof(saddr_.sin_path) - 1);
 	serverSaddr_.sin_family = AF_INET;
 	serverSaddr_.sin_port = htons(port);
 	serverSaddr_.sin_addr.s_addr = inet_addr(serverIpaddr.c_str());
@@ -23,23 +25,15 @@ TcpClientSockEP::TcpClientSockEP(std::string serverIpaddr, int port)
 	sock_ = socket(AF_INET, SOCK_STREAM, 0);
 	if (sock_ == -1)
 	{
-		std::cerr << "Failed to create socket!" << std::endl;
+		simpleLogger.error << "Failed to create socket!\n";
 		return;
 	}
-
-
-	// int bind_retval = bind(sock_, (struct sockaddr*)&saddr_, sizeof(saddr_));
-	// if (bind_retval == -1)
-	// {
-	//     std::cerr << "Failed to bind socket to: " << saddr_.sin_path << std::endl;
-	//     return;
-	// }
 
 	int connect_retval = connect(sock_, (struct sockaddr *)&serverSaddr_, sizeof(serverSaddr_));
 	if (connect_retval == -1)
 	{
-		std::cerr << "Failed to connect client to server\n";
-		std::cerr << "Errno: " << errno << "\n";
+		simpleLogger.error << "Failed to connect client to server\n";
+		simpleLogger.error << "Errno: " << errno << "\n";
 		close(sock_);
 		return;
 	}
@@ -52,8 +46,7 @@ TcpClientSockEP::TcpClientSockEP() {}
 
 TcpClientSockEP::~TcpClientSockEP()
 {
-	// std::cout << "Destructing TcpClientSockEP\n";
-	// unlink(saddr_.sin_path);
+	simpleLogger.debug << "Destructing TcpClientSockEP\n";
 }
 
 
@@ -100,8 +93,8 @@ int TcpClientSockEP::getMessage(char *msg, const int msgMaxLen)
 
 bool TcpClientSockEP::operator==(ISSClientSockEP const *other)
 {
-	// std::cout << "Comparing " << to_str() << " and " << other->to_str() << " with length " << other->getSaddrLen() <<
-	// "\n";
+	simpleLogger.debug << "Comparing " << to_str() << " and " << other->to_str() << " with length "
+	                   << other->getSaddrLen() << "\n";
 	if (memcmp(&saddr_, other->getSaddr(), other->getSaddrLen()) == 0)
 	{
 		return true;

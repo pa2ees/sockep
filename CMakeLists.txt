@@ -11,7 +11,10 @@ add_library(sockep::sockep ALIAS ${SOCKEP})
 
 add_subdirectory(lib)
 
-target_link_libraries(${SOCKEP} PRIVATE pthread)
+target_link_libraries(${SOCKEP} PRIVATE
+  pthread
+  simpleLogger::simpleLogger
+  )
 
 target_include_directories(${SOCKEP} PUBLIC include)
 target_include_directories(${SOCKEP} PRIVATE include/sockep)
