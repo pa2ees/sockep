@@ -6,6 +6,9 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+#include "simpleLogger/SimpleLogger.h"
+SETUP_SIMPLE_LOGGER(simpleLogger);
+
 using namespace sockep;
 
 // ServerSockEP::ServerSockEP(void (*callback)(int, uint8_t*, size_t)) : callback_{callback}
@@ -18,7 +21,7 @@ ServerSockEP::~ServerSockEP()
 
 void ServerSockEP::closeSocket()
 {
-	// std::cout << "Closing socket" << std::endl;
+	simpleLogger.debug << "Closing socket\n";
 	if (serverRunning())
 	{
 		stopServer();
@@ -30,12 +33,12 @@ void ServerSockEP::closeSocket()
 int ServerSockEP::addClient(std::unique_ptr<ISSClientSockEP> newClient)
 {
 	// find if client already exists
-	// std::cout << "Looking for client " << newClient->to_str() << "\n";
+	simpleLogger.debug << "Looking for client " << newClient->to_str() << "\n";
 	std::lock_guard<std::mutex> lock(clientsMutex_);
 
 	for (auto &client : clients_)
 	{
-		// std::cout << "Found client " << client.second->to_str() << "\n";
+		simpleLogger.debug << "Found client " << client.second->to_str() << "\n";
 		if (client.second != nullptr &&
 		    *client.second == *newClient) // strcmp(client.second.sun_path, clientSaddr.sun_path) == 0)
 		{
@@ -55,7 +58,8 @@ int ServerSockEP::addClient(std::unique_ptr<ISSClientSockEP> newClient)
 		// get the id of the last client and add 1
 		clientId = std::prev(clients_.end())->first + 1;
 	}
-	// std::cout << "Inserting client with ID " << clientId << " and address " << newClient->to_str() << std::endl;
+	simpleLogger.debug << "Inserting client with ID " << clientId << " and address " << newClient->to_str() << "\n";
+
 	clients_.emplace(clientId, std::move(newClient));
 	return clientId;
 }
@@ -69,7 +73,7 @@ void ServerSockEP::startServer()
 		serverRunning_ = false;
 		return;
 	}
-	// std::cout << "Starting thread..." << std::endl;
+	simpleLogger.debug << "Starting server thread...\n";
 	serverThread_ = std::thread([=]() { this->runServer(); });
 }
 
@@ -77,7 +81,7 @@ void ServerSockEP::runServer()
 {
 	if (!isValid())
 	{
-		std::cerr << "Socket is not valid, cannot run a server\n";
+		simpleLogger.error << "Socket is not valid, cannot run a server\n";
 		serverRunning_ = false;
 		return;
 	}
@@ -111,7 +115,7 @@ void ServerSockEP::runServer()
 		int pollStatus = poll(pfds.data(), pfds.size(), -1);
 		if (pollStatus == -1)
 		{
-			perror("problem with poll");
+			simpleLogger.error << "Problem with poll. errno: " << errno << "\n";
 			serverRunning_ = false;
 			break;
 		}
@@ -148,15 +152,15 @@ void ServerSockEP::stopServer()
 {
 	if (!serverRunning_)
 	{
-		// std::cout << "Must first start the thread before stopping it" << std::endl;
+		simpleLogger.warning << "Thread is already stopped\n";
 		return;
 	}
 	close(pipeFd_[1]);
 	if (serverThread_.joinable())
 	{
-		// std::cout << "Server thread is joinable, joining..." << std::endl;
+		simpleLogger.debug << "Server thread is joinable, joining...\n";
 		serverThread_.join();
-		// std::cout << "Successfully joined thread." << std::endl;
+		simpleLogger.debug << "Successfully joined thread.\n";
 	}
 }
 

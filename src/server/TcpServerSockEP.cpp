@@ -4,15 +4,17 @@
 #include <sys/poll.h>
 #include <sys/socket.h>
 
+#include "simpleLogger/SimpleLogger.h"
+SETUP_SIMPLE_LOGGER(simpleLogger);
+
 using namespace sockep;
 
 TcpServerSockEP::TcpServerSockEP(std::string ipaddr, int port, std::function<void(int, const char *, size_t)> callback)
     : ServerSockEP(callback), slen_{sizeof(saddr_)}
 {
-	// std::cout << "Constructing TCP Server Socket..." << std::endl;
+	simpleLogger.debug << "Constructing TCP Server Socket...\n";
 
 	memset(&saddr_, 0, sizeof(struct sockaddr_in));
-	// strncpy(saddr_.sin_addr, bindPath.c_str(), sizeof(saddr_.sun_path) - 1);
 	saddr_.sin_family = AF_INET;
 	saddr_.sin_addr.s_addr = INADDR_ANY;
 	saddr_.sin_port = htons(port);
@@ -21,7 +23,7 @@ TcpServerSockEP::TcpServerSockEP(std::string ipaddr, int port, std::function<voi
 	sock_ = socket(AF_INET, SOCK_STREAM, 0);
 	if (sock_ == -1)
 	{
-		std::cerr << "Failed to create socket!" << std::endl;
+		simpleLogger.error << "Failed to create socket!\n";
 		return;
 	}
 
@@ -29,7 +31,7 @@ TcpServerSockEP::TcpServerSockEP(std::string ipaddr, int port, std::function<voi
 	int setsockopt_retval = setsockopt(sock_, SOL_SOCKET, SO_REUSEADDR, &sockOptValue, sizeof(sockOptValue));
 	if (setsockopt_retval == -1)
 	{
-		std::cerr << "Failed to set sock options!\n";
+		simpleLogger.error << "Failed to set sock options!\n";
 		return;
 	}
 
@@ -37,7 +39,8 @@ TcpServerSockEP::TcpServerSockEP(std::string ipaddr, int port, std::function<voi
 	int bind_retval = bind(sock_, (struct sockaddr *)&saddr_, sizeof(saddr_));
 	if (bind_retval == -1)
 	{
-		std::cerr << "Failed to bind socket to: " << saddr_.sin_addr.s_addr << " on port " << saddr_.sin_port << "\n";
+		simpleLogger.error << "Failed to bind socket to: " << saddr_.sin_addr.s_addr << " on port " << saddr_.sin_port
+		                   << "\n";
 		close(sock_);
 		return;
 	}
@@ -46,8 +49,8 @@ TcpServerSockEP::TcpServerSockEP(std::string ipaddr, int port, std::function<voi
 	int listen_retval = listen(sock_, backlog);
 	if (listen_retval == -1)
 	{
-		std::cerr << "Failed to listen on socket at: " << saddr_.sin_addr.s_addr << " on port " << saddr_.sin_port
-		          << "\n";
+		simpleLogger.error << "Failed to listen on socket at: " << saddr_.sin_addr.s_addr << " on port "
+		                   << saddr_.sin_port << "\n";
 		close(sock_);
 		return;
 	}
@@ -56,10 +59,8 @@ TcpServerSockEP::TcpServerSockEP(std::string ipaddr, int port, std::function<voi
 
 TcpServerSockEP::~TcpServerSockEP()
 {
-	// std::cout << "Destructor" << std::endl;
 	// close the socket
 	closeSocket();
-	// unlink(saddr_.sun_path);
 }
 
 void TcpServerSockEP::handlePfdUpdates(const std::vector<struct pollfd> &pfds, std::vector<struct pollfd> &newPfds,
@@ -67,7 +68,7 @@ void TcpServerSockEP::handlePfdUpdates(const std::vector<struct pollfd> &pfds, s
 {
 	for (auto &pfd : pfds)
 	{
-		// std::cout << "Fd: " << pfd.fd << " | events: " << pfd.events << " | revents : " << pfd.revents << "\n";
+		simpleLogger.debug << "Fd: " << pfd.fd << " | events: " << pfd.events << " | revents : " << pfd.revents << "\n";
 		// handle receive socket
 		if (pfd.fd == sock_ && pfd.revents & POLLIN)
 		{ // new client connection
@@ -108,7 +109,7 @@ void TcpServerSockEP::handlePfdUpdates(const std::vector<struct pollfd> &pfds, s
 			}
 			else if (pfd.revents & POLLIN)
 			{ // data to read
-				// std::cout << "Got message from socket " << pfd.fd << "\n";
+				simpleLogger.debug << "Got message from socket " << pfd.fd << "\n";
 
 				bool clientDisconnect = false;
 
@@ -125,7 +126,7 @@ void TcpServerSockEP::handlePfdUpdates(const std::vector<struct pollfd> &pfds, s
 
 				if (clientDisconnect)
 				{ // cout is slow, use it outside the clientsMutex_ lock
-					std::cout << "Client " << pfd.fd << " disconnected.\n";
+					simpleLogger.info << "Client " << pfd.fd << " disconnected.\n";
 				}
 				else if (callback_)
 				{
@@ -147,7 +148,7 @@ std::unique_ptr<ISSClientSockEP> TcpServerSockEP::createNewClient()
 	int newClientSock = accept(sock_, newClient->getSaddr(), &len);
 	if (newClientSock == -1)
 	{ // failed to create socket for new client
-		std::cerr << "Failed to create socket for new client\n";
+		simpleLogger.error << "Failed to create socket for new client\n";
 		return nullptr;
 	}
 	newClient->setSock(newClientSock);
@@ -159,7 +160,7 @@ int TcpServerSockEP::sendMessageToClient(int clientId, const char *msg, size_t m
 {
 	if (!isValid())
 	{
-		std::cerr << "Server is not valid" << std::endl;
+		simpleLogger.error << "Cannot send message to client, server is not valid\n";
 		return -1;
 	}
 	// maybe if clientId == -1 then send message to all clients?
@@ -169,12 +170,11 @@ int TcpServerSockEP::sendMessageToClient(int clientId, const char *msg, size_t m
 
 	if (clientIt == clients_.end())
 	{
-		std::cerr << "Could not find client with id " << clientId << std::endl;
+		simpleLogger.debug << "Could not find client with id " << clientId << "\n";
 		return -1;
 	}
 	// MSG_NOSIGNAL prevents SIGPIPE from killing the program if the client goes away
-	return send(clientIt->second->getSock(), msg, msgLen,
-	            MSG_NOSIGNAL); //, clientIt->second->getSaddr(), clientIt->second->getSaddrLen());
+	return send(clientIt->second->getSock(), msg, msgLen, MSG_NOSIGNAL);
 }
 
 int TcpServerSockEP::sendMessageToClient(int clientId, const std::string &msg)
