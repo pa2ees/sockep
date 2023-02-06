@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include <memory>
 
 class SimpleLogger
 {
@@ -42,11 +43,8 @@ public:
 		SimpleLogger::Level level_{SimpleLogger::Level::warning};
 	};
 
-	SimpleLogger(std::ostream *stream, Level level)
-	    : critical(*this, Level::critical), error(*this, Level::error), warning(*this, Level::warning),
-	      info(*this, Level::info), debug(*this, Level::debug), stream_{stream}, level_{level}
-	{
-	}
+	// Singleton accessor
+	static SimpleLogger &get();
 
 	template <typename T>
 	SimpleLogger &operator<<(const T &x)
@@ -69,13 +67,17 @@ public:
 	OstreamWrapper debug;
 
 private:
+	SimpleLogger(std::ostream *stream, Level level)
+	    : critical(*this, Level::critical), error(*this, Level::error), warning(*this, Level::warning),
+	      info(*this, Level::info), debug(*this, Level::debug), stream_{stream}, level_{level}
+	{
+	}
+
+
 	std::ostream *stream_{nullptr};
 	Level level_{Level::warning};
 };
 
-#ifndef SIMPLE_LOGGER_LEVEL
-#define SIMPLE_LOGGER_LEVEL info
-#endif
-
-#define SETUP_SIMPLE_LOGGER(simpleLoggerName)                                                                          \
-	static SimpleLogger simpleLoggerName(&std::cout, SimpleLogger::Level::SIMPLE_LOGGER_LEVEL)
+#define simpleLogger SimpleLogger::get()
+// #define SETUP_SIMPLE_LOGGER(simpleLoggerName)                                                                          \
+// 	static SimpleLogger simpleLoggerName(&std::cout, SimpleLogger::Level::SIMPLE_LOGGER_LEVEL)
