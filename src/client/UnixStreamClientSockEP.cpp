@@ -3,7 +3,6 @@
 #include <iostream>
 
 #include "simpleLogger/SimpleLogger.h"
-SETUP_SIMPLE_LOGGER(simpleLogger);
 
 using namespace sockep;
 
@@ -46,11 +45,14 @@ UnixStreamClientSockEP::UnixStreamClientSockEP(std::string bindPath, std::string
 }
 
 // for server side client creation
-UnixStreamClientSockEP::UnixStreamClientSockEP() {}
+UnixStreamClientSockEP::UnixStreamClientSockEP() : ownsSocketFile_{false} {}
 
 UnixStreamClientSockEP::~UnixStreamClientSockEP()
 {
-	unlink(saddr_.sun_path);
+	if (ownsSocketFile_)
+	{
+		unlink(saddr_.sun_path);
+	}
 }
 
 

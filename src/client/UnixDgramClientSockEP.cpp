@@ -4,7 +4,6 @@
 #include <sys/poll.h>
 
 #include "simpleLogger/SimpleLogger.h"
-SETUP_SIMPLE_LOGGER(simpleLogger);
 
 using namespace sockep;
 
@@ -39,7 +38,7 @@ UnixDgramClientSockEP::UnixDgramClientSockEP(std::string bindPath, std::string s
 }
 
 // for server side client creation
-UnixDgramClientSockEP::UnixDgramClientSockEP()
+UnixDgramClientSockEP::UnixDgramClientSockEP() : ownsSocketFile_{false}
 {
 	simpleLogger.debug << "Constructing Unix Dgram Client\n";
 }
@@ -47,7 +46,10 @@ UnixDgramClientSockEP::UnixDgramClientSockEP()
 UnixDgramClientSockEP::~UnixDgramClientSockEP()
 {
 	simpleLogger.debug << "Destructing Unix Dgram Client\n";
-	unlink(saddr_.sun_path);
+	if (ownsSocketFile_)
+	{
+		unlink(saddr_.sun_path);
+	}
 }
 
 /******* BOTH INTERFACES **********/
