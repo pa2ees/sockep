@@ -5,6 +5,7 @@
 #include <unistd.h>
 
 #include "simpleLogger/SimpleLogger.h"
+SETUP_SIMPLE_LOGGER(simpleLogger);
 
 using namespace sockep;
 
