@@ -36,6 +36,7 @@ public:
 
 private:
 	void handleIncomingMessage() override;
+	bool ownsSocketFile_{true};
 	struct sockaddr_un saddr_;
 	struct sockaddr_un serverSaddr_;
 };
